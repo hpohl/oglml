@@ -1,1 +1,1 @@
-add_library(SHARED dummy.cpp vec.hpp vec_.h)
+add_library(SHARED dummy.cpp vec.hpp)
