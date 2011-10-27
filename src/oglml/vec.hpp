@@ -1,72 +1,123 @@
-#ifndef GLML_VEC_H
-#define GLML_VEC_H
+#ifndef OGLML_VEC_HPP
+#define OGLML_VEC_HPP
 
 #include <iostream>
-#include <functional>
-#include <vector>
-#include <cmath>
 #include <cassert>
-#include <type_traits>
 
-#define GLML_NAMESPACE_NAME glml
-#define GLML_VEC_NAMESPACE_NAME vec
+#include <oglml/helpers/select.hpp>
+#include <oglml/helpers/operations.hpp>
+#include <oglml/helpers/generate.hpp>
+#include <oglml/helpers/errors.hpp>
 
-// No template alias support in GCC yet
-//#define class template <std::size_t, typename> class
+namespace oglml {
 
-namespace GLML_NAMESPACE_NAME {
-
-    // Helpers
-    template <typename T>
-    struct IsArray {
-        constexpr static bool result = std::is_array<T>::value || std::is_pointer<T>::value;
-    };
-
-    template <bool flag, typename T, typename U>
-    struct Select {
-        typedef T Result;
-    };
-
-    template <typename T, typename U>
-    struct Select<false, T, U> {
-        typedef U Result;
-    };
-
-    namespace GLML_VEC_NAMESPACE_NAME {
-    // Forward declarations for policies
-    // - Storage policies
+    namespace vec {
         struct DefaultStorage;
     }
 
-    // Vec forward declarations
-    template <std::size_t n, typename T, typename SP = vec::DefaultStorage>
-    union Vec;
+    // Forward declaration
+    template <std::size_t n, typename T, class SP = vec::DefaultStorage>
+    struct Vec;
 
-    // Everything belongs to Vec
-    namespace GLML_VEC_NAMESPACE_NAME {
 
-        // Storage Policies
+    namespace vec {
+        struct BaseExpression { };
+
+        // Expression-Template
+        template <std::size_t n, class Derived, typename ReturnType, typename ConstReturnType>
+        class Expression : public BaseExpression {
+        public:
+            ReturnType operator[](std::size_t i)
+            { return downCast()[i]; }
+
+            ConstReturnType operator[](std::size_t i) const
+            { return downCast()[i]; }
+
+        private:
+            Derived& downCast()
+            { return *static_cast<Derived*>(this); }
+
+            const Derived& downCast() const
+            { return *static_cast<const Derived*>(this); }
+        };
+
+        // Storage policies
         struct DefaultStorage {
-            template <std::size_t n, typename T>
-            class Data {
-            public:
-                inline T& operator[](std::size_t i) {
-                    assert(i < n);
-                    return mData[i];
-                }
 
-                inline const T& operator[](std::size_t i) const {
-                    assert(i < n);
-                    return mData[i];
-                }
+            constexpr static bool returnsReference = true;
+
+            template <std::size_t n, typename T>
+            class Container {
+            public:
+
+                typedef T& ReturnType;
+                typedef const T& ConstReturnType;
+
+                T& operator[](std::size_t i)
+                { assert(i < n); return mData[i]; }
+
+                const T& operator[](std::size_t i) const
+                { assert(i < n); return mData[i]; }
 
             private:
                 T mData[n];
             };
+
         };
 
-        // Only for View
-        namespace view {
+        template <class Op,
+                  std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+                  std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+        struct ExpressionStorage : private oglml::DimCheck<nlhs, nrhs> {
+            constexpr static bool returnsReference = false;
+
+            template <std::size_t n, typename T>
+            class Container {
+            public:
+                typedef decltype(Op::run(detail::generate<CRlhs>(), detail::generate<CRrhs>())) ReturnType;
+                typedef const ReturnType ConstReturnType;
+
+                ReturnType operator[](std::size_t i) const
+                { return Op::run((*lhs)[i], (*rhs)[i]); }
+
+                void initialize(const Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+                                const Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs)
+                { this->lhs = &lhs; this->rhs = &rhs; }
+
+            private:
+                const Expression<nlhs, Dlhs, Rlhs, CRlhs>* lhs;
+                const Expression<nrhs, Drhs, Rrhs, CRrhs>* rhs;
+            };
+
+        };
+
+        template <class Op,
+                  std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
+        struct LhsExpressionStorage {
+            constexpr static bool returnsReference = false;
+
+            template <std::size_t n, typename T>
+            class Container {
+            public:
+                typedef decltype(Op::run(detail::generate<CRlhs>(), detail::generate<Trhs>())) ReturnType;
+                typedef const ReturnType ConstReturnType;
+
+                ReturnType operator[](std::size_t i) const
+                { return Op::run((*lhs)[i], *rhs); }
+
+                void initialize(const Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+                                const Trhs& rhs)
+                { this->lhs = &lhs; this->rhs = &rhs; }
+
+            private:
+                const Expression<nlhs, Dlhs, Rlhs, CRlhs>* lhs;
+                const Trhs* rhs;
+            };
+
+        };
+
+        // Only for Swizzler
+        namespace swizzler {
 
             struct Fail {
                 constexpr static bool passed = false;
@@ -83,364 +134,168 @@ namespace GLML_NAMESPACE_NAME {
                 constexpr static bool passed = Select<thisPassed, Check<n, indices...>, Fail>::Result::passed;
             };
 
-        } // namespace view
+        } // namespace swizzler
 
-        // Private namespace for Vec
-        class Private {
-
-            // Private storage policies
-            struct PointerStorage {
-
-                constexpr static bool aligned = false;
-
-                template <std::size_t n, typename T>
-                class Data {
-                public:
-                    T& operator[](std::size_t i) {
-                        assert(i < n);
-                        return *mData[i];
-                    }
-
-                    const T& operator[](std::size_t i) const {
-                        assert(i < n);
-                        return *mData[i];
-                    }
-
-                    void setPointer(std::size_t i, T* ptr) {
-                        assert(i < n);
-                        mData[i] = ptr;
-                    }
-
-                private:
-                    T* mData[n];
-                };
-            };
-
-            template <std::size_t nHost, class SPHost>
-            struct ViewStorage {
-
-               template <std::size_t n, typename T>
-               class Data {
-               public:
-                   typedef Vec<nHost, T, SPHost> HostVec;
-
-                   T& operator[](std::size_t i) {
-                       assert(i < n);
-                       return (*reinterpret_cast<HostVec*>(this))[i];
-                   }
-
-                   const T& operator[](std::size_t i) const {
-                       assert(i < n);
-                       return (*reinterpret_cast<const HostVec*>(this))[i];
-                   }
-
-                   void setIndices(const std::vector<std::size_t>& v)
-                   { mIndices = v; }
-
-               private:
-                   std::vector<std::size_t> mIndices;
-               };
-
-            };
-
-            // View class
-            template <std::size_t n, typename T, class SP, std::size_t... indices>
-            class View {
-            public:
-                // Assertions
-                static_assert(sizeof...(indices) > 0, "A View has to have at least one index.");
-
-                // Typedefs
-                typedef Vec<n, T, SP> VecType;
-
-                // Constants
-                constexpr static std::size_t nIndices = sizeof...(indices);
-                constexpr static bool valid = view::Check<n, indices...>::passed;
-                static const std::size_t mIndices[nIndices];
-
-                // Check if indices are valid
-                constexpr static inline void check()
-                { static_assert(valid, "Indices are not valid."); } // TODO
-
-                // Get indices
-                static const inline std::size_t index(std::size_t i)
-                { check(); return mIndices[i]; }
-
-                // Index operator
-                inline T& operator[](std::size_t i) {
-                    assert(i < n);
-                    return (*reinterpret_cast<VecType*>(this))[index(i)];
-                }
-
-                inline const T& operator[](std::size_t i) const {
-                    assert(i < n);
-                    return (*reinterpret_cast<const Vec<n, T, SP>*>(this))[index(i)];
-                }
-
-                // Convertion
-                inline operator T&() {
-                    static_assert(nIndices == 0, "Only views with one index can be converted.");
-                    return *this[0];
-                }
-
-                inline operator const T&() const {
-                    static_assert(nIndices == 0, "Only views with one index can be converted.");
-                    return *this[0];
-                }
-            };
-
-        }; //Private namespace for Vec
-
-        // View statics
+        // Swizzler definition
         template <std::size_t n, typename T, class SP, std::size_t... indices>
-        const std::size_t Private::View<n, T, SP, indices...>::mIndices[nIndices] = { indices... };
+        class Swizzler : public Expression<n, Swizzler<n, T, SP, indices...>,
+                typename SP::template Container<n, T>::ReturnType,
+                typename SP::template Container<n, T>::ConstReturnType> {
+        public:
+            // Typedefs
+            typedef typename SP::template Container<n, T> Host;
+            typedef typename Host::ReturnType ReturnType;
+            typedef typename Host::ConstReturnType ConstReturnType;
 
-    } // namespace GLML_VEC_NAMESPACE_NAME
+            // Friends
+            template <std::size_t, typename, class>
+            friend struct Vec;
 
-    // Assignment
-    namespace assignm {
+            // Constants
+            constexpr static bool valid = swizzler::Check<n, indices...>::passed;
+            constexpr static std::size_t nIndices = sizeof...(indices);
 
-        template <bool isArray, std::size_t begin>
-        struct UnknownTypeAssignment {
-            template <std::size_t nv, typename Tv, class SPv,
-                      typename Tf, typename... Args>
-            static inline void run(Vec<nv, Tv, SPv>& v, const Tf& f, const Args&... args);
+            // Helpers
+            constexpr static void validate()
+            { static_assert(valid, "Indices are not valid."); }
+
+            // Indices
+            static const std::size_t indexArray[nIndices];
+
+            // Get indices
+            static const std::size_t index(std::size_t i)
+            { assert(i < nIndices); validate(); return indexArray[i]; }
+
+            // Index operator
+            ReturnType operator[](std::size_t i)
+            { return host()[index(i)]; }
+
+            ConstReturnType operator[](std::size_t i) const
+            { return host()[index(i)]; }
+
+        private:
+            Swizzler() { }
+            Swizzler(const Swizzler&) { }
+            ~Swizzler() { }
+
+            Host& host()
+            { return *reinterpret_cast<Host*>(this); }
+
+            const Host& host() const
+            { return *reinterpret_cast<const Host*>(this); }
         };
 
-        template <std::size_t begin>
-        struct UnknownTypeAssignment<true, begin> {
-            template <std::size_t nv, typename Tv, class SPv,
-                      typename Tf, typename... Args>
-            static inline void run(Vec<nv, Tv, SPv>& v, const Tf& f, const Args&... args);
-        };
+        template <std::size_t n, typename T, class SP, std::size_t... indices>
+        const std::size_t Swizzler<n, T, SP, indices...>::indexArray[nIndices] = { indices... };
 
-        template <std::size_t begin>
-        struct Assignment {
-            template <std::size_t nv, typename Tv, class SPv, typename... Args>
-            static inline void run(Vec<nv, Tv, SPv>&, const Args&...) {
-                static_assert(sizeof...(Args) == 0, "GLML corrupted.");
-                static_assert(begin == nv, "Not enough assignment parameters.");
-            }
+    } // namespace vec
 
-            template <std::size_t nv, typename Tv, class SPv,
-                      std::size_t nf, typename Tf, class SPf, std::size_t... indices,
-                      typename... Args>
-            static inline void run(Vec<nv, Tv, SPv>& v, const vec::Private::View<nf, Tf, SPf, indices...>& f,
-                               const Args&... args) {
-                constexpr static std::size_t step = f.nIndices;
-                static_assert((begin + step) <= nv, "Too many assignment paramters.");
-                for (std::size_t i = 0; i < step; ++i)
-                    v[begin + i] = f[i];
-                Assignment<begin + step>::run(v, args...);
-            }
+    // Global operators
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+              std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+    Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<CRrhs>()),
+    vec::ExpressionStorage<Plus,
+    nlhs, Dlhs, Rlhs, CRlhs,
+    nrhs, Drhs, Rrhs, CRrhs> > operator+
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+     const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
+        Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<CRrhs>()),
+                vec::ExpressionStorage<Plus, nlhs, Dlhs, Rlhs, CRlhs,
+                nrhs, Drhs, Rrhs, CRrhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
+    }
 
-            template <std::size_t nv, typename Tv, class SPv,
-                      std::size_t nf, typename Tf, class SPf, typename... Args>
-            static inline void run(Vec<nv, Tv, SPv> &v, const Vec<nf, Tf, SPf>& f, const Args&... args) {
-                constexpr static std::size_t step = nf;
-                static_assert((begin + step) <= nv, "Too many assignment parameters.");
-                for (std::size_t i = 0; i < step; ++i)
-                    v[begin + i] = f[i];
-                Assignment<begin + step>::run(v, args...);
-            }
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
+    Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<Trhs>()),
+    vec::LhsExpressionStorage<Plus,
+    nlhs, Dlhs, Rlhs, CRlhs, Trhs> > operator+
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs, const Trhs& rhs) {
+        Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<Trhs>()),
+            vec::LhsExpressionStorage<Plus, nlhs, Dlhs, Rlhs, CRlhs, Trhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
+    }
 
-            template <std::size_t nv, typename Tv, class SPv,
-                      typename Tf, typename... Args>
-            static inline void run(Vec<nv, Tv, SPv>& v, const Tf& f, const Args&... args)
-            { UnknownTypeAssignment<IsArray<Tf>::result, begin>::run(v, f, args...); }
-        };
-
-        template <bool isArray, std::size_t begin>
-        template <std::size_t nv, typename Tv, class SPv,
-                  typename Tf, typename... Args>
-        inline void UnknownTypeAssignment<isArray, begin>::run
-        (Vec<nv, Tv, SPv>& v, const Tf& f, const Args&... args) {
-            constexpr static std::size_t step = 1;
-            static_assert((begin + step) <= nv, "Too many assignment parameters.");
-            v[begin] = f;
-            Assignment<begin + step>::run(v, args...);
-        }
-
-        template <std::size_t begin>
-        template <std::size_t nv, typename Tv, class SPv,
-                  typename Tf, typename... Args>
-        inline void UnknownTypeAssignment<true, begin>::run
-        (Vec<nv, Tv, SPv>& v, const Tf& f, const Args&... args) {
-            static_assert(sizeof...(args) == 0, "Assignment array paramters of " \
-                          "undefined length always have to be the last.");
-            for (std::size_t i = 0; i < (nv - begin); ++i)
-                v[begin + i] = f[i];
-        }
-
-    } // namespace assignm
-
-    template <typename Tv, typename First, typename... Args>
-    inline void assign(Tv& v, const First& first, const Args&... args)
-    { assignm::Assignment<0>::run(v, first, args...); }
-
-
-    // Length
-    template <std::size_t n, typename T, class SP>
-    inline float length(const Vec<n, T, SP>& v) {
-        static_assert(n < 4, "Length calculations are only available for vectors with " \
-                      "a dimension count of 2 or 3.");
-        float len;
-        for (std::size_t i = 0; i < n; ++i)
-            len += v[i] * v[i];
-        return std::sqrt(len);
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
+    Vec<nlhs, decltype(detail::generate<CRlhs>() * detail::generate<Trhs>()),
+    vec::LhsExpressionStorage<Multiplies,
+    nlhs, Dlhs, Rlhs, CRlhs, Trhs> > operator*
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs, const Trhs& rhs) {
+        Vec<nlhs, decltype(detail::generate<CRlhs>() * detail::generate<Trhs>()),
+            vec::LhsExpressionStorage<Multiplies, nlhs, Dlhs, Rlhs, CRlhs, Trhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
     }
 
 
-    // Print
-    template <std::size_t n, typename T, class SP>
-    inline void print(const Vec<n, T, SP>& v) {
+    // Global helper funcs
+    template <std::size_t n, class D, typename R, typename CR>
+    void print(const vec::Expression<n, D, R, CR>& e) {
         for (std::size_t i = 0; i < n; ++i) {
-            std::cout << v[i];
+            std::cout << e[i];
             if (i < n - 1)
                 std::cout << ", ";
         }
         std::cout << std::endl;
     }
 
-
-    // Swizzle
-    // Static swizzle
-    template <std::size_t... indices, std::size_t n, typename T, class SP>
-    inline vec::Private::View<n, T, SP, indices...>& swizzle(Vec<n, T, SP>& v) {
-        return *reinterpret_cast<vec::Private::View<n, T, SP, indices...>*>(&v);
-    }
-
-    template <std::size_t... indices, std::size_t n, typename T, class SP>
-    inline vec::Private::View<n, T, SP, indices...>& swizzle(const Vec<n, T, SP>& v) {
-        return *reinterpret_cast<const vec::Private::View<n, T, SP, indices...>*>(&v);
-    }
-
-    // Runtime swizzle
-    template <std::size_t n, typename T, class SP, typename... Indices>
-    inline Vec<sizeof...(Indices), T, vec::Private::PointerStorage> swizzle
-    (Vec<n, T, SP>& v, Indices... indices) {
-        const std::vector<std::size_t> vindices = { indices... };
-        Vec<sizeof...(Indices), T, vec::Private::PointerStorage> vp;
-        for (std::size_t i = 0; i < sizeof...(Indices); ++i)
-            vp.data.setPointer(i, &v[vindices[i]]);
-        return vp;
-    }
-
-    template <std::size_t n, typename T, class SP, typename... Indices>
-    inline const Vec<sizeof...(Indices), T, vec::Private::PointerStorage> swizzle
-    (const Vec<n, T, SP>& v, Indices... indices) {
-        std::vector<std::size_t> vindices = { indices... }; // TODO
-        Vec<sizeof...(Indices), T, vec::Private::PointerStorage> vp;
-        for (std::size_t i = 0; i < sizeof...(Indices); ++i)
-            vp.data.setPointer(i, const_cast<T*>(&v[vindices[i]]));
-        return vp;
-    }
-
-    // Union Vec definition
+    // Vec definition
     template <std::size_t n, typename T, class SP>
-    union Vec {
-        // Public to all other Vecs
-        template <std::size_t, typename, class>
-        friend union Vec;
-
+    struct Vec : public vec::Expression<n, Vec<n, T, SP>,
+            typename SP::template Container<n, T>::ReturnType,
+            typename SP::template Container<n, T>::ConstReturnType> {
         // Typedefs
-        typedef Vec<n, T, SP> ThisType;
-        typedef typename SP::template Data<n, T> ConfiguredData;
+        typedef typename SP::template Container<n, T> Container;
+        typedef typename Container::ReturnType ReturnType;
+        typedef typename Container::ConstReturnType ConstReturnType;
 
-        // Helper
-    private:
-        static ThisType& generate()
-        { return static_cast<ThisType*>(0); }
+        // Helper to declare swizzlers
+        template <std::size_t... indices> struct Swizzler
+        { typedef vec::Swizzler<n, T, SP, indices...> Type; };
 
-        static const ThisType& generateConst()
-        { return static_cast<const ThisType*>(0); }
+        // Ctor and dtor // TODO Assignment
+        Vec() { }
 
-        static ConfiguredData& generateData()
-        { return static_cast<ConfiguredData*>(0); }
+        Vec(T a, T b, T c) {
+            (*this)[0] = a;
+            (*this)[1] = b;
+            (*this)[2] = c;
+        }
 
-        static const ConfiguredData& generateConstData()
-        { return static_cast<const ConfiguredData*>(0); }
+        Vec(const Vec& rhs) : data(rhs.data) { }
 
-    public:
-
-        // Assertions
-        static_assert(!IsArray<T>::result, "You may not store an array/pointer.");
-
-        // Friends
-
-        // Ctor, dtor
-        Vec()
-        { }
-
-        Vec(const Vec& rhs) : data(rhs.data)
-        { }
-
-        template <typename First, typename... Args>
-        Vec(const First& first, const Args&... args)
-        { try { assign(first, args...); } catch(...) { std::abort(); } }
+        template <std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+        Vec(const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
+            for (std::size_t i = 0; i < n; ++i)
+                (*this)[i] = rhs[i];
+        }
 
         ~Vec() { }
 
         // Index operator
-        const T& operator[](std::size_t i) const
+        ReturnType operator[](std::size_t i)
         { return data[i]; }
 
-        T& operator[](std::size_t i) // TODO
+        ConstReturnType operator[](std::size_t i) const
         { return data[i]; }
 
-        // Additional methods
-        template <typename First, typename... Args>
-        auto assign(const First& first, const Args&... args) ->
-        decltype(glml::assign(ThisType::generate(), first, args...))
-        { glml::assign(*this, first, args...); }
+        // Data
+        union {
+            Container data;
 
-        decltype(glml::length(generate())) length() const
-        { return glml::length(*this); }
-
-        decltype(glml::print(ThisType::generate())) print() const
-        { glml::print(*this); }
-
-        template <std::size_t... indices>
-        decltype(glml::swizzle<indices...>(ThisType::generate())) swizzle()
-        { return glml::swizzle<indices...>(*this); }
-
-        template <std::size_t... indices>
-        const Vec<sizeof...(indices), T, vec::Private::PointerStorage> swizzle() const
-        { return glml::swizzle<indices...>(*this); }
-
-        template <typename... Indices>
-        auto swizzle(Indices... indices) ->
-        decltype(glml::swizzle(ThisType::generate(), indices...))
-        { return glml::swizzle(*this, indices...); }
-
-        template <typename... Indices>
-        auto swizzle(Indices... indices) const ->
-        decltype(glml::swizzle(ThisType::generate(), indices...))
-        { return glml::swizzle(*this, indices...); }
-
-        // GLSL Compatibility
-        // One index
-        vec::Private::View<n, T, SP, 0> x;
-        vec::Private::View<n, T, SP, 1> y;
-        vec::Private::View<n, T, SP, 2> z;
-        vec::Private::View<n, T, SP, 3> w;
-
-        // Two indices
-        vec::Private::View<n, T, SP, 0, 1> xy;
-        vec::Private::View<n, T, SP, 0, 1> yx;
-
-        // Three indices
-        vec::Private::View<n, T, SP, 0, 1, 2> xyz;
-
-        // The data
-        ConfiguredData data;
+            // Swizzle masks
+            typename Swizzler<0>::Type x;
+            typename Swizzler<0, 1, 2>::Type xyz;
+            typename Swizzler<2, 1, 0>::Type zyx;
+        };
     };
 
-    // Typedefs
+    // GLSL Types
     typedef Vec<2, float> vec2;
     typedef Vec<3, float> vec3;
     typedef Vec<4, float> vec4;
 
-} // namespace GLML_NAMESPACE_VEC
+} // namespace oglml
 
-#endif // GLML_VEC_H
+#endif // OGLML_VEC_HPP

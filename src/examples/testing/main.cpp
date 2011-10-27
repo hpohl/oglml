@@ -1,13 +1,12 @@
 #include <oglml/vec.hpp>
 
 int main() {
+    oglml::vec3 v1(1.0, 2.0, 3.0);
+    oglml::vec3 v2(10.0, 20.0, 30.0);
 
-    const glml::vec3 v1(1.0, 2.0, 3.0);
-    const glml::vec3 v2(v1.swizzle(1, 2), 10.0);
+    oglml::vec3 r((v1 * 10.0).zyx);
 
-    v1.length();
-
-    v1.print();
+    oglml::print(r);
 
     return 0;
 }
