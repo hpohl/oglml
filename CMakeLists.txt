@@ -3,7 +3,7 @@ project(oglml)
 
 set(CMAKE_CXX_COMPILER g++)
 
-add_definitions(-std=c++0x)
+add_definitions(-std=c++0x -Wall -Wextra)
 
 set(CMAKE_BINARY_DIR build)
 

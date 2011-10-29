@@ -2,23 +2,34 @@
 #define OGLML_VEC_HPP
 
 #include <iostream>
+#include <tuple>
 #include <cassert>
 
 #include <oglml/helpers/select.hpp>
 #include <oglml/helpers/operations.hpp>
 #include <oglml/helpers/generate.hpp>
 #include <oglml/helpers/errors.hpp>
+#include <oglml/helpers/traits.hpp>
+#include <oglml/helpers/constexpr.hpp>
 
 namespace oglml {
 
     namespace vec {
+        // Storage policies forward declaration
         struct DefaultStorage;
+
+        template <class Op,
+                  std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+                  std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+        struct ExpressionStorage;
+
+        template <class Op, std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
+        struct LhsExpressionStorage;
     }
 
     // Forward declaration
     template <std::size_t n, typename T, class SP = vec::DefaultStorage>
     struct Vec;
-
 
     namespace vec {
         struct BaseExpression { };
@@ -68,17 +79,25 @@ namespace oglml {
         template <class Op,
                   std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
                   std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
-        struct ExpressionStorage : private oglml::DimCheck<nlhs, nrhs> {
+        struct ExpressionStorage : private oglml::DimProcessable<nlhs, nrhs> {
             constexpr static bool returnsReference = false;
 
             template <std::size_t n, typename T>
             class Container {
             public:
-                typedef decltype(Op::run(detail::generate<CRlhs>(), detail::generate<CRrhs>())) ReturnType;
+                typedef decltype(Op::run(priv::generate<CRlhs>(), priv::generate<CRrhs>())) ReturnType;
                 typedef const ReturnType ConstReturnType;
 
+                template <typename CR, typename Tv, int ti>
+                static CR access(const Tv& obj, std::size_t i, Int2Type<ti>)
+                { return obj[i]; }
+
+                template <typename CR, typename Tv>
+                static CR access(const Tv& obj, std::size_t, Int2Type<1>)
+                { return obj[0]; }
+
                 ReturnType operator[](std::size_t i) const
-                { return Op::run((*lhs)[i], (*rhs)[i]); }
+                { return Op::run(access<CRlhs>(*lhs, i, Int2Type<nlhs>()), access<CRrhs>(*rhs, i, Int2Type<nrhs>())); }
 
                 void initialize(const Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
                                 const Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs)
@@ -99,7 +118,7 @@ namespace oglml {
             template <std::size_t n, typename T>
             class Container {
             public:
-                typedef decltype(Op::run(detail::generate<CRlhs>(), detail::generate<Trhs>())) ReturnType;
+                typedef decltype(Op::run(priv::generate<CRlhs>(), priv::generate<Trhs>())) ReturnType;
                 typedef const ReturnType ConstReturnType;
 
                 ReturnType operator[](std::size_t i) const
@@ -138,7 +157,7 @@ namespace oglml {
 
         // Swizzler definition
         template <std::size_t n, typename T, class SP, std::size_t... indices>
-        class Swizzler : public Expression<n, Swizzler<n, T, SP, indices...>,
+        class Swizzler : public Expression<sizeof...(indices), Swizzler<n, T, SP, indices...>,
                 typename SP::template Container<n, T>::ReturnType,
                 typename SP::template Container<n, T>::ConstReturnType> {
         public:
@@ -163,7 +182,7 @@ namespace oglml {
             static const std::size_t indexArray[nIndices];
 
             // Get indices
-            static const std::size_t index(std::size_t i)
+            static std::size_t index(std::size_t i)
             { assert(i < nIndices); validate(); return indexArray[i]; }
 
             // Index operator
@@ -173,10 +192,16 @@ namespace oglml {
             ConstReturnType operator[](std::size_t i) const
             { return host()[index(i)]; }
 
+            // Cast operator
+            operator ReturnType()
+            { dimAssert<nIndices, 1>(); return host()[index(0)]; }
+
+            operator ConstReturnType() const
+            { dimAssert<nIndices, 1>(); return host()[index(0)]; }
+
         private:
             Swizzler() { }
             Swizzler(const Swizzler&) { }
-            ~Swizzler() { }
 
             Host& host()
             { return *reinterpret_cast<Host*>(this); }
@@ -191,45 +216,145 @@ namespace oglml {
     } // namespace vec
 
     // Global operators
+    // Helper
+    template <std::size_t n1, std::size_t n2>
+    struct Max {
+        constexpr static std::size_t result = n1 > n2 ? n1 : n2;
+    };
+
+    // expression OP expression
     template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
               std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
-    Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<CRrhs>()),
+    const Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() + priv::generate<CRrhs>()),
     vec::ExpressionStorage<Plus,
     nlhs, Dlhs, Rlhs, CRlhs,
     nrhs, Drhs, Rrhs, CRrhs> > operator+
     (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
      const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
-        Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<CRrhs>()),
+        Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() + priv::generate<CRrhs>()),
                 vec::ExpressionStorage<Plus, nlhs, Dlhs, Rlhs, CRlhs,
                 nrhs, Drhs, Rrhs, CRrhs> > vex;
         vex.data.initialize(lhs, rhs);
         return vex;
     }
 
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+              std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+    const Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() - priv::generate<CRrhs>()),
+    vec::ExpressionStorage<Minus,
+    nlhs, Dlhs, Rlhs, CRlhs,
+    nrhs, Drhs, Rrhs, CRrhs> > operator-
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+     const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
+        Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() - priv::generate<CRrhs>()),
+                vec::ExpressionStorage<Minus, nlhs, Dlhs, Rlhs, CRlhs,
+                nrhs, Drhs, Rrhs, CRrhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
+    }
+
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+              std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+    const Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() * priv::generate<CRrhs>()),
+    vec::ExpressionStorage<Multiplies,
+    nlhs, Dlhs, Rlhs, CRlhs,
+    nrhs, Drhs, Rrhs, CRrhs> > operator*
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+     const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
+        Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() * priv::generate<CRrhs>()),
+                vec::ExpressionStorage<Multiplies, nlhs, Dlhs, Rlhs, CRlhs,
+                nrhs, Drhs, Rrhs, CRrhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
+    }
+
+    template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs,
+              std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+    const Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() / priv::generate<CRrhs>()),
+    vec::ExpressionStorage<Divides,
+    nlhs, Dlhs, Rlhs, CRlhs,
+    nrhs, Drhs, Rrhs, CRrhs> > operator/
+    (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs,
+     const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
+        Vec<Max<nlhs, nrhs>::result, decltype(priv::generate<CRlhs>() / priv::generate<CRrhs>()),
+                vec::ExpressionStorage<Divides, nlhs, Dlhs, Rlhs, CRlhs,
+                nrhs, Drhs, Rrhs, CRrhs> > vex;
+        vex.data.initialize(lhs, rhs);
+        return vex;
+    }
+
+    // expression OP value
     template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
-    Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<Trhs>()),
-    vec::LhsExpressionStorage<Plus,
-    nlhs, Dlhs, Rlhs, CRlhs, Trhs> > operator+
+    typename GetFirst<const Vec<nlhs, decltype(priv::generate<CRlhs>() + priv::generate<Trhs>()),
+    vec::LhsExpressionStorage<Plus, nlhs, Dlhs, Rlhs, CRlhs, Trhs> >,
+    typename std::enable_if<!std::is_base_of<vec::BaseExpression, Trhs>::value>::type>::Result operator+
     (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs, const Trhs& rhs) {
-        Vec<nlhs, decltype(detail::generate<CRlhs>() + detail::generate<Trhs>()),
+        Vec<nlhs, decltype(priv::generate<CRlhs>() + priv::generate<Trhs>()),
             vec::LhsExpressionStorage<Plus, nlhs, Dlhs, Rlhs, CRlhs, Trhs> > vex;
         vex.data.initialize(lhs, rhs);
         return vex;
     }
 
     template <std::size_t nlhs, class Dlhs, typename Rlhs, typename CRlhs, typename Trhs>
-    Vec<nlhs, decltype(detail::generate<CRlhs>() * detail::generate<Trhs>()),
-    vec::LhsExpressionStorage<Multiplies,
-    nlhs, Dlhs, Rlhs, CRlhs, Trhs> > operator*
+    typename GetFirst<const Vec<nlhs, decltype(priv::generate<CRlhs>() * priv::generate<Trhs>()),
+    const vec::LhsExpressionStorage<Multiplies, nlhs, Dlhs, Rlhs, CRlhs, Trhs> >,
+    typename std::enable_if<!std::is_base_of<vec::BaseExpression, Trhs>::value>::type>::Result operator*
     (const vec::Expression<nlhs, Dlhs, Rlhs, CRlhs>& lhs, const Trhs& rhs) {
-        Vec<nlhs, decltype(detail::generate<CRlhs>() * detail::generate<Trhs>()),
+        Vec<nlhs, decltype(priv::generate<CRlhs>() * priv::generate<Trhs>()),
             vec::LhsExpressionStorage<Multiplies, nlhs, Dlhs, Rlhs, CRlhs, Trhs> > vex;
         vex.data.initialize(lhs, rhs);
         return vex;
     }
 
+    namespace vec {
+        // Make operators visible for Swizzler
+        using oglml::operator+;
+        using oglml::operator-;
+        using oglml::operator*;
+        using oglml::operator/;
+    }
+
 
     // Global helper funcs
+    // Assign
+    namespace assignment {
+
+        template <std::size_t begin>
+        struct Assignment {
+
+            // Using SFINAE
+            template <std::size_t n, class D, typename R, typename CR, typename... Args>
+            static typename std::enable_if<sizeof...(Args) == 0>::type run
+            (const vec::Expression<n, D, R, CR>&, const Args&...) {
+                static_assert(begin == n, "Not enough assignment parameters.");
+            }
+
+            template <std::size_t ne, class De, typename Re, typename CRe,
+                      std::size_t nv, class Dv, typename Rv, typename CRv, typename... Args>
+            static void run(vec::Expression<ne, De, Re, CRe>& ex,
+                            const vec::Expression<nv, Dv, Rv, CRv>& v, const Args&... args) {
+                static_assert((begin + nv) <= ne, "Too many assignment parameters.");
+                Assignment<begin + nv>::run(assignArray<begin, nv>(ex, v), args...);
+            }
+
+            template <std::size_t ne, class De, typename Re, typename CRe, typename First, typename... Args>
+            static typename std::enable_if<!std::is_base_of<vec::BaseExpression, First>::value>::type run
+            (vec::Expression<ne, De, Re, CRe>& ex, const First& first, const Args&... args) {
+                static_assert((begin + 1) <= ne, "Too many assignment parameters.");
+                ex[begin] = first;
+                Assignment<begin + 1>::run(ex, args...);
+            }
+
+        };
+
+    }
+
+    template <std::size_t n, class D, typename R, typename CR, typename First, typename... Args>
+    void assign(vec::Expression<n, D, R, CR>& ex, const First& first, const Args&... args) {
+        assignment::Assignment<0>::run(ex, first, args...);
+    }
+
+    // Print
     template <std::size_t n, class D, typename R, typename CR>
     void print(const vec::Expression<n, D, R, CR>& e) {
         for (std::size_t i = 0; i < n; ++i) {
@@ -254,22 +379,20 @@ namespace oglml {
         template <std::size_t... indices> struct Swizzler
         { typedef vec::Swizzler<n, T, SP, indices...> Type; };
 
-        // Ctor and dtor // TODO Assignment
+        // Ctor and dtor
         Vec() { }
-
-        Vec(T a, T b, T c) {
-            (*this)[0] = a;
-            (*this)[1] = b;
-            (*this)[2] = c;
-        }
 
         Vec(const Vec& rhs) : data(rhs.data) { }
 
-        template <std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
+        /*template <std::size_t nrhs, class Drhs, typename Rrhs, typename CRrhs>
         Vec(const vec::Expression<nrhs, Drhs, Rrhs, CRrhs>& rhs) {
             for (std::size_t i = 0; i < n; ++i)
                 (*this)[i] = rhs[i];
-        }
+        }*/
+
+        template <typename First, typename... Args>
+        Vec(const First& first, const Args&... args)
+        { assign(*this, first, args...); }
 
         ~Vec() { }
 
@@ -286,6 +409,9 @@ namespace oglml {
 
             // Swizzle masks
             typename Swizzler<0>::Type x;
+            typename Swizzler<1>::Type y;
+            typename Swizzler<0, 1>::Type xy;
+            typename Swizzler<0, 1>::Type yx;
             typename Swizzler<0, 1, 2>::Type xyz;
             typename Swizzler<2, 1, 0>::Type zyx;
         };

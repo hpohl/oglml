@@ -4,7 +4,7 @@
 #include <type_traits>
 
 namespace oglml {
-    namespace detail {
+    namespace priv {
 
         template <typename T>
         typename std::remove_reference<T>::type generate()
