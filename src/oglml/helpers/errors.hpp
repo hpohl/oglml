@@ -3,11 +3,16 @@
 
 #include <cstddef>
 
+#include <oglml/helpers/compilerinfo.hpp>
+
 #define OGLML_DIM_ERROR_MSG_ "Incompatible dimensions."
+
+#define OGLML_ALIGNED_ERROR_MSG_ "Memory is not aligned. Access it manually by using the " \
+    "index operators."
 
 namespace oglml {
     template <std::size_t n1, std::size_t n2>
-    constexpr void dimAssert()
+    void dimAssert()
     { static_assert(n1 == n2, OGLML_DIM_ERROR_MSG_); }
 
     template <std::size_t n1, std::size_t n2>

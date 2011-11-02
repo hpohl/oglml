@@ -3,13 +3,15 @@
 
 namespace oglml {
 
-    template <typename T, typename...>
-    struct GetFirst {
-        typedef T Result;
-    };
+    namespace priv {
+        template <typename T, typename...>
+        struct GetFirst {
+            typedef T Result;
+        };
 
-    template <int i>
-    struct Int2Type { };
+        template <int i>
+        struct Int2Type { };
+    }
 
 }
 
