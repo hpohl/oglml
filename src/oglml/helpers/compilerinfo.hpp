@@ -3,6 +3,7 @@
 
 // Reset to defaults
 #define oglml_constexpr constexpr
+#define oglml_constexpr_if_available constexpr
 
 // Enable all C++11 features
 #define OGLML_CXX11_CONSTEXPR
@@ -38,6 +39,8 @@
 #undef OGLML_CXX11_CONSTEXPR
 #undef oglml_constexpr
 #define oglml_constexpr const
+#undef oglml_constexpr_if_available
+#define oglml_constexpr_if_available
 #endif
 
 // Unrestricted unions

@@ -1,13 +1,18 @@
 #ifndef OGLML_HELPERS_CONSTEXPR_HPP
 #define OGLML_HELPERS_CONSTEXPR_HPP
 
+#include <oglml/helpers/compilerinfo.hpp>
+
 namespace oglml {
 
-    namespace constexp {
+    namespace cnst {
+
         template <typename T>
-        constexpr T max(T a, T b)
+        oglml_constexpr T max(T a, T b)
         { return a > b ? a : b; }
-    }
-}
+
+    } // namespace cnst
+
+} // namespace oglml
 
 #endif // OGLML_HELPERS_CONSTEXPR_HPP

@@ -3,6 +3,7 @@
 
 namespace oglml {
 
+    // Type selection
     template <bool flag, typename T1, typename T2>
     struct Select {
         typedef T1 Result;

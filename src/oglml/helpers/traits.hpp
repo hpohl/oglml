@@ -3,7 +3,8 @@
 
 namespace oglml {
 
-    namespace priv {
+    namespace detail {
+
         template <typename T, typename...>
         struct GetFirst {
             typedef T Result;
@@ -11,8 +12,8 @@ namespace oglml {
 
         template <int i>
         struct Int2Type { };
-    }
+    } // namespace detail
 
-}
+} // namespace oglml
 
 #endif // OGLML_HELPERS_TRAITS_HPP
