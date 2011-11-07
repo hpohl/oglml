@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include <oglml/vecfwd.hpp>
+#include <oglml/vec/info.hpp>
 #include <oglml/vec/storagepolicies/default.hpp>
 #include <oglml/vec/expression.hpp>
 #include <oglml/vec/funcs.hpp>
@@ -57,15 +58,232 @@ namespace oglml {
             Container data;
 
             // Swizzlers
-            vec::detail::Swizzler<VecInfo, 0> x;
-            vec::detail::Swizzler<VecInfo, 1> y;
-            vec::detail::Swizzler<VecInfo, 2> z;
-            vec::detail::Swizzler<VecInfo, 3> w;
+            // One index
+            vec::detail::Swizzler<VecInfo, 0> x, r, s;
+            vec::detail::Swizzler<VecInfo, 1> y, g, t;
+            vec::detail::Swizzler<VecInfo, 2> z, b, p;
+            vec::detail::Swizzler<VecInfo, 3> w, a, q;
 
-            vec::detail::Swizzler<VecInfo, 0, 1> xy;
-            vec::detail::Swizzler<VecInfo, 1, 0> yx;
+            // Two indices
+            vec::detail::Swizzler<VecInfo, 0, 0> xx, rr, ss;
+            vec::detail::Swizzler<VecInfo, 0, 1> xy, rg, st;
+            vec::detail::Swizzler<VecInfo, 0, 2> xz, rb, sp;
+            vec::detail::Swizzler<VecInfo, 0, 3> xw, ra, sq;
 
-            vec::detail::Swizzler<VecInfo, 0, 1, 2> xyz;
+            vec::detail::Swizzler<VecInfo, 1, 0> yx, gr, ts;
+            vec::detail::Swizzler<VecInfo, 1, 1> yy, gg, tt;
+            vec::detail::Swizzler<VecInfo, 1, 2> yz, gb, tp;
+            vec::detail::Swizzler<VecInfo, 1, 3> yw, ga, tq;
+
+            vec::detail::Swizzler<VecInfo, 2, 0> zx, br, ps;
+            vec::detail::Swizzler<VecInfo, 2, 1> zy, bg, pt;
+            vec::detail::Swizzler<VecInfo, 2, 2> zz, bb, pp;
+            vec::detail::Swizzler<VecInfo, 2, 3> zw, ba, pq;
+
+            vec::detail::Swizzler<VecInfo, 3, 0> wx, ar, qs;
+            vec::detail::Swizzler<VecInfo, 3, 1> wy, ag, qt;
+            vec::detail::Swizzler<VecInfo, 3, 2> wz, ab, qp;
+            vec::detail::Swizzler<VecInfo, 3, 3> ww, aa, qq;
+
+            // Three indices
+            vec::detail::Swizzler<VecInfo, 0, 0, 0> xxx, rrr, sss;
+            vec::detail::Swizzler<VecInfo, 0, 0, 1> xxy, rrg, sst;
+            vec::detail::Swizzler<VecInfo, 0, 0, 2> xxz, rrb, ssp;
+            vec::detail::Swizzler<VecInfo, 0, 0, 3> xxw, rra, ssq;
+            vec::detail::Swizzler<VecInfo, 0, 1, 0> xyx, rgr, sts;
+            vec::detail::Swizzler<VecInfo, 0, 1, 1> xyy, rgg, stt;
+            vec::detail::Swizzler<VecInfo, 0, 1, 2> xyz, rgb, stp;
+            vec::detail::Swizzler<VecInfo, 0, 1, 3> xyw, rga, stq;
+            vec::detail::Swizzler<VecInfo, 0, 2, 0> xzx, rbr, sps;
+            vec::detail::Swizzler<VecInfo, 0, 2, 1> xzy, rbg, spt;
+            vec::detail::Swizzler<VecInfo, 0, 2, 2> xzz, rbb, spp;
+            vec::detail::Swizzler<VecInfo, 0, 2, 3> xzw, rba, spq;
+            vec::detail::Swizzler<VecInfo, 0, 3, 0> xwx, rar, sqs;
+            vec::detail::Swizzler<VecInfo, 0, 3, 1> xwy, rag, sqt;
+            vec::detail::Swizzler<VecInfo, 0, 3, 2> xwz, rab, sqp;
+            vec::detail::Swizzler<VecInfo, 0, 3, 3> xww, raa, sqq;
+
+            vec::detail::Swizzler<VecInfo, 1, 0, 0> yxx, grr, tss;
+            vec::detail::Swizzler<VecInfo, 1, 0, 1> yxy, grg, tst;
+            vec::detail::Swizzler<VecInfo, 1, 0, 2> yxz, grb, tsp;
+            vec::detail::Swizzler<VecInfo, 1, 0, 3> yxw, gra, tsq;
+            vec::detail::Swizzler<VecInfo, 1, 1, 0> yyx, ggr, tts;
+            vec::detail::Swizzler<VecInfo, 1, 1, 1> yyy, ggg, ttt;
+            vec::detail::Swizzler<VecInfo, 1, 1, 2> yyz, ggb, ttp;
+            vec::detail::Swizzler<VecInfo, 1, 1, 3> yyw, gga, ttq;
+            vec::detail::Swizzler<VecInfo, 1, 2, 0> yzx, gbr, tps;
+            vec::detail::Swizzler<VecInfo, 1, 2, 1> yzy, gbg, tpt;
+            vec::detail::Swizzler<VecInfo, 1, 2, 2> yzz, gbb, tpp;
+            vec::detail::Swizzler<VecInfo, 1, 2, 3> yzw, gba, tpq;
+            vec::detail::Swizzler<VecInfo, 1, 3, 0> ywx, gar, tqs;
+            vec::detail::Swizzler<VecInfo, 1, 3, 1> ywy, gag, tqt;
+            vec::detail::Swizzler<VecInfo, 1, 3, 2> ywz, gab, tqp;
+            vec::detail::Swizzler<VecInfo, 1, 3, 3> yww, gaa, tqq;
+
+            vec::detail::Swizzler<VecInfo, 2, 0, 0> zxx, brr, pss;
+            vec::detail::Swizzler<VecInfo, 2, 0, 1> zxy, brg, pst;
+            vec::detail::Swizzler<VecInfo, 2, 0, 2> zxz, brb, psp;
+            vec::detail::Swizzler<VecInfo, 2, 0, 3> zxw, bra, psq;
+            vec::detail::Swizzler<VecInfo, 2, 1, 0> zyx, bgr, pts;
+            vec::detail::Swizzler<VecInfo, 2, 1, 1> zyy, bgg, ptt;
+            vec::detail::Swizzler<VecInfo, 2, 1, 2> zyz, bgb, ptp;
+            vec::detail::Swizzler<VecInfo, 2, 1, 3> zyw, bga, ptq;
+            vec::detail::Swizzler<VecInfo, 2, 2, 0> zzx, bbr, pps;
+            vec::detail::Swizzler<VecInfo, 2, 2, 1> zzy, bbg, ppt;
+            vec::detail::Swizzler<VecInfo, 2, 2, 2> zzz, bbb, ppp;
+            vec::detail::Swizzler<VecInfo, 2, 2, 3> zzw, bba, ppq;
+            vec::detail::Swizzler<VecInfo, 2, 3, 0> zwx, bar, pqs;
+            vec::detail::Swizzler<VecInfo, 2, 3, 1> zwy, bag, pqt;
+            vec::detail::Swizzler<VecInfo, 2, 3, 2> zwz, bab, pqp;
+            vec::detail::Swizzler<VecInfo, 2, 3, 3> zww, baa, pqq;
+
+            vec::detail::Swizzler<VecInfo, 3, 0, 0> wxx, arr, qss;
+            vec::detail::Swizzler<VecInfo, 3, 0, 1> wxy, arg, qst;
+            vec::detail::Swizzler<VecInfo, 3, 0, 2> wxz, arb, qsp;
+            vec::detail::Swizzler<VecInfo, 3, 0, 3> wxw, ara, qsq;
+            vec::detail::Swizzler<VecInfo, 3, 1, 0> wyx, agr, qts;
+            vec::detail::Swizzler<VecInfo, 3, 1, 1> wyy, agg, qtt;
+            vec::detail::Swizzler<VecInfo, 3, 1, 2> wyz, agb, qtp;
+            vec::detail::Swizzler<VecInfo, 3, 1, 3> wyw, aga, qtq;
+            vec::detail::Swizzler<VecInfo, 3, 2, 0> wzx, abr, qps;
+            vec::detail::Swizzler<VecInfo, 3, 2, 1> wzy, abg, qpt;
+            vec::detail::Swizzler<VecInfo, 3, 2, 2> wzz, abb, qpp;
+            vec::detail::Swizzler<VecInfo, 3, 2, 3> wzw, aba, qpq;
+            vec::detail::Swizzler<VecInfo, 3, 3, 0> wwx, aar, qqs;
+            vec::detail::Swizzler<VecInfo, 3, 3, 1> wwy, aag, qqt;
+            vec::detail::Swizzler<VecInfo, 3, 3, 2> wwz, aab, qqp;
+            vec::detail::Swizzler<VecInfo, 3, 3, 3> www, aaa, qqq;
+
+            // Four indices
+            vec::detail::Swizzler<VecInfo, 0, 0, 0, 0> xxxx, rrrr, ssss;
+            vec::detail::Swizzler<VecInfo, 0, 0, 0, 1> xxxy, rrrg, ssst;
+            vec::detail::Swizzler<VecInfo, 0, 0, 0, 2> xxxz, rrrb, sssp;
+            vec::detail::Swizzler<VecInfo, 0, 0, 0, 3> xxxw, rrra, sssq;
+            vec::detail::Swizzler<VecInfo, 0, 0, 1, 0> xxyx, rrgr, ssts;
+            vec::detail::Swizzler<VecInfo, 0, 0, 1, 1> xxyy, rrgg, sstt;
+            vec::detail::Swizzler<VecInfo, 0, 0, 1, 2> xxyz, rrgb, sstp;
+            vec::detail::Swizzler<VecInfo, 0, 0, 1, 3> xxyw, rrga, sstq;
+            vec::detail::Swizzler<VecInfo, 0, 0, 2, 0> xxzx, rrbr, ssps;
+            vec::detail::Swizzler<VecInfo, 0, 0, 2, 1> xxzy, rrbg, sspt;
+            vec::detail::Swizzler<VecInfo, 0, 0, 2, 2> xxzz, rrbb, sspp;
+            vec::detail::Swizzler<VecInfo, 0, 0, 2, 3> xxzw, rrba, sspq;
+            vec::detail::Swizzler<VecInfo, 0, 0, 3, 0> xxwx, rrar, ssqs;
+            vec::detail::Swizzler<VecInfo, 0, 0, 3, 1> xxwy, rrag, ssqt;
+            vec::detail::Swizzler<VecInfo, 0, 0, 3, 2> xxwz, rrab, ssqp;
+            vec::detail::Swizzler<VecInfo, 0, 0, 3, 3> xxww, rraa, ssqq;
+            vec::detail::Swizzler<VecInfo, 0, 1, 0, 0> xyxx, rgrr, stss; // ----
+            vec::detail::Swizzler<VecInfo, 0, 1, 0, 1> xyxy, rgrg, stst;
+            vec::detail::Swizzler<VecInfo, 0, 1, 0, 2> xyxz, rgrb, stsp;
+            vec::detail::Swizzler<VecInfo, 0, 1, 0, 3> xyxw, rgra, stsq;
+            vec::detail::Swizzler<VecInfo, 0, 1, 1, 0> xyyx, rggr, stts;
+            vec::detail::Swizzler<VecInfo, 0, 1, 1, 1> xyyy, rggg, sttt;
+            vec::detail::Swizzler<VecInfo, 0, 1, 1, 2> xyyz, rggb, sttp;
+            vec::detail::Swizzler<VecInfo, 0, 1, 1, 3> xyyw, rgga, sttq;
+            vec::detail::Swizzler<VecInfo, 0, 1, 2, 0> xyzx, rgbr, stps;
+            vec::detail::Swizzler<VecInfo, 0, 1, 2, 1> xyzy, rgbg, stpt;
+            vec::detail::Swizzler<VecInfo, 0, 1, 2, 2> xyzz, rgbb, stpp;
+            vec::detail::Swizzler<VecInfo, 0, 1, 2, 3> xyzw, rgba, stpq;
+            vec::detail::Swizzler<VecInfo, 0, 1, 3, 0> xywx, rgar, stqs;
+            vec::detail::Swizzler<VecInfo, 0, 1, 3, 1> xywy, rgag, stqt;
+            vec::detail::Swizzler<VecInfo, 0, 1, 3, 2> xywz, rgab, stqp;
+            vec::detail::Swizzler<VecInfo, 0, 1, 3, 3> xyww, rgaa, stqq;
+            vec::detail::Swizzler<VecInfo, 0, 2, 0, 0> xzxx, rbrr, spss; // ----
+            vec::detail::Swizzler<VecInfo, 0, 2, 0, 1> xzxy, rbrg, spst;
+            vec::detail::Swizzler<VecInfo, 0, 2, 0, 2> xzxz, rbrb, spsp;
+            vec::detail::Swizzler<VecInfo, 0, 2, 0, 3> xzxw, rbra, spsq;
+            vec::detail::Swizzler<VecInfo, 0, 2, 1, 0> xzyx, rbgr, spts;
+            vec::detail::Swizzler<VecInfo, 0, 2, 1, 1> xzyy, rbgg, sptt;
+            vec::detail::Swizzler<VecInfo, 0, 2, 1, 2> xzyz, rbgb, sptp;
+            vec::detail::Swizzler<VecInfo, 0, 2, 1, 3> xzyw, rbga, sptq;
+            vec::detail::Swizzler<VecInfo, 0, 2, 2, 0> xzzx, rbbr, spps;
+            vec::detail::Swizzler<VecInfo, 0, 2, 2, 1> xzzy, rbbg, sppt;
+            vec::detail::Swizzler<VecInfo, 0, 2, 2, 2> xzzz, rbbb, sppp;
+            vec::detail::Swizzler<VecInfo, 0, 2, 2, 3> xzzw, rbba, sppq;
+            vec::detail::Swizzler<VecInfo, 0, 2, 3, 0> xzwx, rbar, spqs;
+            vec::detail::Swizzler<VecInfo, 0, 2, 3, 1> xzwy, rbag, spqt;
+            vec::detail::Swizzler<VecInfo, 0, 2, 3, 2> xzwz, rbab, spqp;
+            vec::detail::Swizzler<VecInfo, 0, 2, 3, 3> xzww, rbaa, spqq;
+            vec::detail::Swizzler<VecInfo, 0, 3, 0, 0> xwxx, rarr, sqss; // ----
+            vec::detail::Swizzler<VecInfo, 0, 3, 0, 1> xwxy, rarg, sqst;
+            vec::detail::Swizzler<VecInfo, 0, 3, 0, 2> xwxz, rarb, sqsp;
+            vec::detail::Swizzler<VecInfo, 0, 3, 0, 3> xwxw, rara, sqsq;
+            vec::detail::Swizzler<VecInfo, 0, 3, 1, 0> xwyx, ragr, sqts;
+            vec::detail::Swizzler<VecInfo, 0, 3, 1, 1> xwyy, ragg, sqtt;
+            vec::detail::Swizzler<VecInfo, 0, 3, 1, 2> xwyz, ragb, sqtp;
+            vec::detail::Swizzler<VecInfo, 0, 3, 1, 3> xwyw, raga, sqtq;
+            vec::detail::Swizzler<VecInfo, 0, 3, 2, 0> xwzx, rabr, sqps;
+            vec::detail::Swizzler<VecInfo, 0, 3, 2, 1> xwzy, rabg, sqpt;
+            vec::detail::Swizzler<VecInfo, 0, 3, 2, 2> xwzz, rabb, sqpp;
+            vec::detail::Swizzler<VecInfo, 0, 3, 2, 3> xwzw, raba, sqpq;
+            vec::detail::Swizzler<VecInfo, 0, 3, 3, 0> xwwx, raar, sqqs;
+            vec::detail::Swizzler<VecInfo, 0, 3, 3, 1> xwwy, raag, sqqt;
+            vec::detail::Swizzler<VecInfo, 0, 3, 3, 2> xwwz, raab, sqqp;
+            vec::detail::Swizzler<VecInfo, 0, 3, 3, 3> xwww, raaa, sqqq;
+
+            vec::detail::Swizzler<VecInfo, 1, 0, 0, 0> yxxx, grrr, tsss;
+            vec::detail::Swizzler<VecInfo, 1, 0, 0, 1> yxxy, grrg, tsst;
+            vec::detail::Swizzler<VecInfo, 1, 0, 0, 2> yxxz, grrb, tssp;
+            vec::detail::Swizzler<VecInfo, 1, 0, 0, 3> yxxw, grra, tssq;
+            vec::detail::Swizzler<VecInfo, 1, 0, 1, 0> yxyx, grgr, tsts;
+            vec::detail::Swizzler<VecInfo, 1, 0, 1, 1> yxyy, grgg, tstt;
+            vec::detail::Swizzler<VecInfo, 1, 0, 1, 2> yxyz, grgb, tstp;
+            vec::detail::Swizzler<VecInfo, 1, 0, 1, 3> yxyw, grga, tstq;
+            vec::detail::Swizzler<VecInfo, 1, 0, 2, 0> yxzx, grbr, tsps;
+            vec::detail::Swizzler<VecInfo, 1, 0, 2, 1> yxzy, grbg, tspt;
+            vec::detail::Swizzler<VecInfo, 1, 0, 2, 2> yxzz, grbb, tspp;
+            vec::detail::Swizzler<VecInfo, 1, 0, 2, 3> yxzw, grba, tspq;
+            vec::detail::Swizzler<VecInfo, 1, 0, 3, 0> yxwx, grar, tsqs;
+            vec::detail::Swizzler<VecInfo, 1, 0, 3, 1> yxwy, grag, tsqt;
+            vec::detail::Swizzler<VecInfo, 1, 0, 3, 2> yxwz, grab, tsqp;
+            vec::detail::Swizzler<VecInfo, 1, 0, 3, 3> yxww, graa, tsqq;
+            vec::detail::Swizzler<VecInfo, 1, 1, 0, 0> yyxx, ggrr, ttss; // ----
+            vec::detail::Swizzler<VecInfo, 1, 1, 0, 1> yyxy, ggrg, ttst;
+            vec::detail::Swizzler<VecInfo, 1, 1, 0, 2> yyxz, ggrb, ttsp;
+            vec::detail::Swizzler<VecInfo, 1, 1, 0, 3> yyxw, ggra, ttsq;
+            vec::detail::Swizzler<VecInfo, 1, 1, 1, 0> yyyx, gggr, ttts;
+            vec::detail::Swizzler<VecInfo, 1, 1, 1, 1> yyyy, gggg, tttt;
+            vec::detail::Swizzler<VecInfo, 1, 1, 1, 2> yyyz, gggb, tttp;
+            vec::detail::Swizzler<VecInfo, 1, 1, 1, 3> yyyw, ggga, tttq;
+            vec::detail::Swizzler<VecInfo, 1, 1, 2, 0> yyzx, ggbr, ttps;
+            vec::detail::Swizzler<VecInfo, 1, 1, 2, 1> yyzy, ggbg, ttpt;
+            vec::detail::Swizzler<VecInfo, 1, 1, 2, 2> yyzz, ggbb, ttpp;
+            vec::detail::Swizzler<VecInfo, 1, 1, 2, 3> yyzw, ggba, ttpq;
+            vec::detail::Swizzler<VecInfo, 1, 1, 3, 0> yywx, ggar, ttqs;
+            vec::detail::Swizzler<VecInfo, 1, 1, 3, 1> yywy, ggag, ttqt;
+            vec::detail::Swizzler<VecInfo, 1, 1, 3, 2> yywz, ggab, ttqp;
+            vec::detail::Swizzler<VecInfo, 1, 1, 3, 3> yyww, ggaa, ttqq;
+            vec::detail::Swizzler<VecInfo, 1, 2, 0, 0> yzxx, gbrr, tpss; // ----
+            vec::detail::Swizzler<VecInfo, 1, 2, 0, 1> yzxy, gbrg, tpst;
+            vec::detail::Swizzler<VecInfo, 1, 2, 0, 2> yzxz, gbrb, tpsp;
+            vec::detail::Swizzler<VecInfo, 1, 2, 0, 3> yzxw, gbra, tpsq;
+            vec::detail::Swizzler<VecInfo, 1, 2, 1, 0> yzyx, gbgr, tpts;
+            vec::detail::Swizzler<VecInfo, 1, 2, 1, 1> yzyy, gbgg, tptt;
+            vec::detail::Swizzler<VecInfo, 1, 2, 1, 2> yzyz, gbgb, tptp;
+            vec::detail::Swizzler<VecInfo, 1, 2, 1, 3> yzyw, gbga, tptq;
+            vec::detail::Swizzler<VecInfo, 1, 2, 2, 0> yzzx, gbbr, tpps;
+            vec::detail::Swizzler<VecInfo, 1, 2, 2, 1> yzzy, gbbg, tppt;
+            vec::detail::Swizzler<VecInfo, 1, 2, 2, 2> yzzz, gbbb, tppp;
+            vec::detail::Swizzler<VecInfo, 1, 2, 2, 3> yzzw, gbba, tppq;
+            vec::detail::Swizzler<VecInfo, 1, 2, 3, 0> yzwx, gbar, tpqs;
+            vec::detail::Swizzler<VecInfo, 1, 2, 3, 1> yzwy, gbag, tpqt;
+            vec::detail::Swizzler<VecInfo, 1, 2, 3, 2> yzwz, gbab, tpqp;
+            vec::detail::Swizzler<VecInfo, 1, 2, 3, 3> yzww, gbaa, tpqq;
+            vec::detail::Swizzler<VecInfo, 1, 3, 0, 0> ywxx, garr, tqss; // ----
+            vec::detail::Swizzler<VecInfo, 1, 3, 0, 1> ywxy, garg, tqst;
+            vec::detail::Swizzler<VecInfo, 1, 3, 0, 2> ywxz, garb, tqsp;
+            vec::detail::Swizzler<VecInfo, 1, 3, 0, 3> ywxw, gara, tqsq;
+            vec::detail::Swizzler<VecInfo, 1, 3, 1, 0> ywyx, gagr, tqts;
+            vec::detail::Swizzler<VecInfo, 1, 3, 1, 1> ywyy, gagg, tqtt;
+            vec::detail::Swizzler<VecInfo, 1, 3, 1, 2> ywyz, gagb, tqtp;
+            vec::detail::Swizzler<VecInfo, 1, 3, 1, 3> ywyw, gaga, tqtq;
+            vec::detail::Swizzler<VecInfo, 1, 3, 2, 0> ywzx, gabr, tqps;
+            vec::detail::Swizzler<VecInfo, 1, 3, 2, 1> ywzy, gabg, tqpt;
+            vec::detail::Swizzler<VecInfo, 1, 3, 2, 2> ywzz, gabb, tqpp;
+            vec::detail::Swizzler<VecInfo, 1, 3, 2, 3> ywzw, gaba, tqpq;
+            vec::detail::Swizzler<VecInfo, 1, 3, 3, 0> ywwx, gaar, tqqs;
+            vec::detail::Swizzler<VecInfo, 1, 3, 3, 1> ywwy, gaag, tqqt;
+            vec::detail::Swizzler<VecInfo, 1, 3, 3, 2> ywwz, gaab, tqqp;
+            vec::detail::Swizzler<VecInfo, 1, 3, 3, 3> ywww, gaaa, tqqq;
         };
     };
 

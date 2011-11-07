@@ -35,7 +35,7 @@
 
 // C++11 features
 // Constexpr
-#if OGLML_GNUC_VERSION < 40600
+#if OGLML_GNUC_VERSION < OGLML_GCC_VERSION_46
 #undef OGLML_CXX11_CONSTEXPR
 #undef oglml_constexpr
 #define oglml_constexpr const

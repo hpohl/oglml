@@ -10,6 +10,11 @@ namespace oglml {
             typedef T Result;
         };
 
+        template <typename, typename T, typename...>
+        struct GetSecond {
+            typedef T Result;
+        };
+
         template <int i>
         struct Int2Type { };
     } // namespace detail

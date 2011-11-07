@@ -1,6 +1,8 @@
 #ifndef OGLML_VEC_FUNCS_HPP
 #define OGLML_VEC_FUNCS_HPP
 
+#include <iostream>
+
 #include <oglml/vec/expression.hpp>
 #include <oglml/helpers/operations.hpp>
 
