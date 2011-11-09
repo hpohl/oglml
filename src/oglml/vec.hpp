@@ -155,7 +155,7 @@ namespace oglml {
             vec::detail::Swizzler<VecInfo, 3, 3, 3> www, aaa, qqq;
 
             // Four indices
-            /*vec::detail::Swizzler<VecInfo, 0, 0, 0, 0> xxxx, rrrr, ssss;
+            vec::detail::Swizzler<VecInfo, 0, 0, 0, 0> xxxx, rrrr, ssss;
             vec::detail::Swizzler<VecInfo, 0, 0, 0, 1> xxxy, rrrg, ssst;
             vec::detail::Swizzler<VecInfo, 0, 0, 0, 2> xxxz, rrrb, sssp;
             vec::detail::Swizzler<VecInfo, 0, 0, 0, 3> xxxw, rrra, sssq;
@@ -413,7 +413,7 @@ namespace oglml {
             vec::detail::Swizzler<VecInfo, 3, 3, 3, 0> wwwx, aaar, qqqs;
             vec::detail::Swizzler<VecInfo, 3, 3, 3, 1> wwwy, aaag, qqqt;
             vec::detail::Swizzler<VecInfo, 3, 3, 3, 2> wwwz, aaab, qqqp;
-            vec::detail::Swizzler<VecInfo, 3, 3, 3, 3> wwww, aaaa, qqqq;*/
+            vec::detail::Swizzler<VecInfo, 3, 3, 3, 3> wwww, aaaa, qqqq;
         };
     };
 
