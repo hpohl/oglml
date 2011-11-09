@@ -1,16 +1,23 @@
 #include <oglml/vec.hpp>
 
-// Acceptable for little test programs
-using namespace oglml;
+// Include t
+using namespace oglml::glsl;
+
+vec3 process(const vec3& v) {
+    vec3 w(v);
+    w = v + v.yyy;
+    return w;
+}
 
 int main() {
+    // Def
     vec3 v1(1.0, 2.0, 3.0);
-    vec3 v2(1.0, 2.0, 3.0);
+    vec3 v2(v1);
 
-    vec3 r;
+    // Calc
+    vec3 r = 10.0 + v1;
 
-    r.xy = vec2(v1.xy);
-
+    // Print
     print(r);
 
     return 0;

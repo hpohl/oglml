@@ -1,197 +1,28 @@
 #ifndef OGLML_VEC_SWIZZLER_HPP
 #define OGLML_VEC_SWIZZLER_HPP
 
+#include <oglml/vec/info.hpp>
 #include <oglml/vec/expression.hpp>
+#include <oglml/vec/swizzlerfwd.hpp>
 #include <oglml/vec/funcs.hpp>
-#include <oglml/helpers/compilerinfo.hpp>
-#include <oglml/helpers/select.hpp>
+#include <oglml/vec/storagepolicies/swizzler.hpp>
 #include <oglml/helpers/errors.hpp>
+#include <oglml/helpers/indextools.hpp>
+#include <oglml/helpers/traits.hpp>
 
 namespace oglml {
+    // Overloaded assign function
+    template <class I, std::size_t... indices, typename First, typename... Args>
+    typename vec::detail::Swizzler<I, indices...>::ExpressionT& assign
+    (vec::detail::Swizzler<I, indices...>& swizz, const First& first, const Args&... args) {
+        static_assert(!detail::HasDuplicates<indices...>::result,
+                      OGLML_INDEX_DUPLICATES_ERROR_MSG);
+        return assign(static_cast<typename vec::detail::Swizzler<I, indices...>
+                      ::ExpressionT&>(swizz), first, args...);
+    }
+
     namespace vec {
         namespace detail {
-
-            // Index validators
-            namespace swizzler {
-
-                // Access single elements
-                template <std::size_t...>
-                struct Access { };
-
-                template <std::size_t idx, std::size_t first, std::size_t... array>
-                struct Access<idx, first, array...> {
-                    oglml_constexpr static std::size_t result = Access<idx - 1, array...>::result;
-                };
-
-                template <std::size_t first, std::size_t... array>
-                struct Access<0, first, array...> {
-                    oglml_constexpr static std::size_t result = first;
-                };
-
-                // Check for duplicates
-                namespace find {
-
-                    struct Forward { };
-                    struct Backward { };
-
-                    namespace detail {
-
-                        template <std::size_t passed>
-                        struct Found {
-                            oglml_constexpr static bool found = true;
-                            oglml_constexpr static std::size_t index = passed;
-                        };
-
-                    } // namespace detail
-
-                } // namespace find
-
-                // Find forward
-                namespace findf {
-
-                    namespace detail {
-
-                        template <std::size_t...>
-                        struct Find { };
-
-                        template <std::size_t v, std::size_t passed, std::size_t... array>
-                        struct Find<v, passed, array...> {
-                            oglml_constexpr static bool found = false;
-                            oglml_constexpr static std::size_t index = passed;
-                        };
-
-                        template <std::size_t v, std::size_t passed, std::size_t first, std::size_t... array>
-                        struct Find<v, passed, first, array...> {
-                            oglml_constexpr static bool hereFound = (v == first);
-                            typedef typename Select<hereFound, find::detail::Found<passed>,
-                            Find<v, passed + 1, array...> >::Result Finder;
-                            oglml_constexpr static bool found = Finder::found;
-                            oglml_constexpr static std::size_t index = Finder::index;
-                        };
-
-                    } // namespace detail
-
-                    template <std::size_t v, std::size_t... array>
-                    struct Find {
-                        typedef detail::Find<v, 0, array...> Finder;
-                        oglml_constexpr static bool found = Finder::found;
-                        oglml_constexpr static std::size_t index = Finder::index;
-                    };
-
-                } // namespace findf
-
-                // Find backward
-                namespace findb {
-
-                    namespace detail {
-
-                        template <std::size_t...>
-                        struct Find { };
-
-                        template <std::size_t v, std::size_t idx, std::size_t... array>
-                        struct Find<v, idx, array...> {
-                            oglml_constexpr static bool hereFound =
-                                    (Access<idx, array...>::result == v);
-                            typedef typename Select<hereFound, find::detail::Found<idx>,
-                            Find<v, idx - 1, array...> >::Result Finder;
-                            oglml_constexpr static bool found = Finder::found;
-                            oglml_constexpr static std::size_t index = Finder::index;
-                        };
-
-                        template <std::size_t v, std::size_t... array>
-                        struct Find<v, 0, array...> {
-                            oglml_constexpr static bool found =
-                                    (Access<0, array...>::result == v);
-                            oglml_constexpr static std::size_t index = 0;
-                        };
-
-                    } // namespace detail
-
-                    template <std::size_t v, std::size_t... array>
-                    struct Find {
-                        typedef detail::Find<v, sizeof...(array) - 1, array...> Finder;
-                        oglml_constexpr static bool found = Finder::found;
-                        oglml_constexpr static std::size_t index = Finder::index;
-                    };
-
-                } // namespace findb
-
-                template <class Method, std::size_t v, std::size_t... array>
-                struct Find {
-                    typedef findf::Find<v, array...> Finder;
-                    oglml_constexpr static bool found = Finder::found;
-                    oglml_constexpr static std::size_t index = Finder::index;
-                };
-
-                template <std::size_t v, std::size_t... array>
-                struct Find<find::Backward, v, array...> {
-                    typedef findb::Find<v, array...> Finder;
-                    oglml_constexpr static bool found = Finder::found;
-                    oglml_constexpr static std::size_t index = Finder::index;
-                };
-
-                // Check for duplicates
-                namespace dupl {
-
-                    template <std::size_t val, std::size_t... array>
-                    struct FindFWandBW {
-                        oglml_constexpr static std::size_t forwards =
-                                Find<find::Forward, val, array...>::index;
-                        oglml_constexpr static std::size_t backwards =
-                                Find<find::Backward, val, array...>::index;
-                        oglml_constexpr static bool differs = (forwards != backwards);
-                    };
-
-                    struct Duplicated {
-                        oglml_constexpr static bool result = true;
-                    };
-
-                    template <std::size_t idx, std::size_t... array>
-                    class HasDuplicates {
-                        oglml_constexpr static std::size_t val = Access<idx, array...>::result;
-                        typedef FindFWandBW<val, array...> Finder;
-
-                    public:
-                        oglml_constexpr static bool result = Select<Finder::differs,
-                        Duplicated, HasDuplicates<idx - 1, array...> >::Result::result;
-
-                    };
-
-                    template <std::size_t first, std::size_t... array>
-                    class HasDuplicates<0, first, array...> {
-                        oglml_constexpr static std::size_t val = Access<0, array...>::result;
-                        typedef FindFWandBW<val, array...> Finder;
-
-                    public:
-                        oglml_constexpr static bool result = Finder::differs;
-                    };
-
-                } // namespace dupl
-
-                template <std::size_t... array>
-                struct HasDuplicates {
-                    oglml_constexpr static bool result =
-                            dupl::HasDuplicates<sizeof...(array) - 1, array...>::result;
-                };
-
-                // Check for index overflow
-                struct CheckFailed {
-                    oglml_constexpr static bool passed = false;
-                };
-
-                template <std::size_t n, std::size_t... indices>
-                struct CheckIndices {
-                    oglml_constexpr static bool passed = true;
-                };
-
-                template <std::size_t n, std::size_t first,  std::size_t... indices>
-                struct CheckIndices<n, first, indices...> {
-                    oglml_constexpr static bool thisPassed = first < n;
-                    oglml_constexpr static bool passed = Select<thisPassed,
-                        CheckIndices<n, indices...>, CheckFailed>::Result::passed;
-                };
-
-            } // namespace swizzler
 
             // Swizzler
             template <class I, std::size_t... tindices>
@@ -213,9 +44,9 @@ namespace oglml {
 
                 // Constants
                 oglml_constexpr static std::size_t indexcount = sizeof...(tindices);
-                oglml_constexpr static bool valid = swizzler::CheckIndices<n, tindices...>::passed;
+                oglml_constexpr static bool valid = oglml::detail::CheckIndices<n, tindices...>::passed;
                 oglml_constexpr static bool containsDuplicates =
-                        swizzler::HasDuplicates<tindices...>::result;
+                        oglml::detail::HasDuplicates<tindices...>::result;
 
             private:
 #ifdef OGLML_CXX11_UNRESTRICTED_UNIONS
@@ -237,7 +68,7 @@ namespace oglml {
                 { static_assert(valid, "Indices are not valid."); }
 
                 static oglml_constexpr_if_available void noDuplicates()
-                { static_assert(!containsDuplicates, "Contains index duplicates."); };
+                { static_assert(!containsDuplicates, OGLML_INDEX_DUPLICATES_ERROR_MSG); };
 
                 // Indices as array
                 static const std::size_t indices[indexcount];
@@ -272,6 +103,47 @@ namespace oglml {
 
         } // namespace detail
     } // namespace vec
+
+    // Swizzler funcs
+    // Static
+    template <std::size_t... indices, class I>
+    vec::detail::Swizzler
+    <typename vec::detail::ExprInfo2HostInfo<I>::Result, indices...>& swizzle
+    (vec::Expression<I>& ex) {
+        return *reinterpret_cast<vec::detail::Swizzler
+                <typename vec::detail::ExprInfo2HostInfo<I>::Result, indices...>*>
+                (&ex);
+    }
+
+    template <std::size_t... indices, class I>
+    const vec::detail::Swizzler
+    <typename vec::detail::ExprInfo2HostInfo<I>::Result, indices...>& swizzle
+    (const vec::Expression<I>& ex) {
+        return *reinterpret_cast<const vec::detail::Swizzler
+                <typename vec::detail::ExprInfo2HostInfo<I>::Result, indices...>*>
+                (&ex);
+    }
+
+    // Runtime
+    template <class I, typename... Args>
+    const Vec<I::n, typename I::T, vec::SwizzlerStorage<vec::Expression<I> > > swizzle
+    (const vec::Expression<I>& ex, const Args&... args) {
+        static_assert(sizeof...(Args) == I::n, "Too many/less swizzle parameters.");
+        std::vector<int> indices = { args... };
+
+        Vec<I::n, typename I::T, vec::SwizzlerStorage<vec::Expression<I> > > ret;
+
+        ret.data.setHost(&ex);
+        for (std::size_t i = 0; i < I::n; ++i)
+            ret.data.setIndex(i, indices[i]);
+        return ret;
+    }
+
+    template <class I, typename... Args>
+    Vec<I::n, typename I::T, vec::SwizzlerStorage<vec::Expression<I> > > swizzle
+    (vec::Expression<I>& ex, const Args&... args)
+    { return swizzle(const_cast<const vec::Expression<I>&>(ex), args...); }
+
 } // namespace oglml
 
 #endif // OGLML_VEC_SWIZZLER_HPP

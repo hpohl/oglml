@@ -10,6 +10,8 @@
 #define OGLML_ALIGNED_ERROR_MSG_ "Memory is not aligned. " \
     "Access it manually by using the index operators."
 
+#define OGLML_INDEX_DUPLICATES_ERROR_MSG "Indices contain duplicates."
+
 namespace oglml {
     template <std::size_t n1, std::size_t n2>
     void dimAssert()

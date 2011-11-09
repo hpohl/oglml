@@ -11,6 +11,10 @@ namespace oglml {
         oglml_constexpr T max(T a, T b)
         { return a > b ? a : b; }
 
+        template <typename T>
+        oglml_constexpr T min(T a, T b)
+        { return a < b ? a : b; }
+
     } // namespace cnst
 
 } // namespace oglml

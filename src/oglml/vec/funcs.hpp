@@ -4,6 +4,9 @@
 #include <iostream>
 
 #include <oglml/vec/expression.hpp>
+#include <oglml/vec/swizzlerfwd.hpp>
+#include <oglml/helpers/errors.hpp>
+#include <oglml/helpers/indextools.hpp>
 #include <oglml/helpers/operations.hpp>
 
 namespace oglml {

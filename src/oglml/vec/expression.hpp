@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cassert>
 
-#include <oglml/vec/info.hpp>
 #include <oglml/helpers/compilerinfo.hpp>
 #include <oglml/helpers/generate.hpp>
 
@@ -111,6 +110,18 @@ namespace oglml {
             > Result;
         };
 
+
+        template <class Op, typename T, class I>
+        struct MergeTypeAndInfo {
+            typedef expression::Info<
+            I::n,
+            typename merge::MergeTypes<Op, T, typename I::T>::Result,
+            ExpressionStorage<Op, typename I::T, T>,
+            typename merge::MergeTypes<Op, T, typename I::T>::Result,
+            typename merge::MergeTypes<Op, T, typename I::T>::Result
+            > Result;
+        };
+
         // Storage policies
         template <class Op, class Ilhs, class Irhs>
         struct ExpressionStorage {
@@ -168,6 +179,34 @@ namespace oglml {
 
         };
 
+        template <class Op, typename Tlhs, class Irhs>
+        struct RhsExpressionStorage {
+
+            template <std::size_t n, typename T>
+            class Container {
+                typedef Tlhs LhsT;
+                typedef vec::Expression<Irhs> RhsT;
+                typedef typename MergeTypeAndInfo<Op, Tlhs, Irhs>::Result Merged;
+
+                const LhsT* mLhs;
+                const RhsT* mRhs;
+
+            public:
+                // Typedefs
+                typedef T ReturnT;
+                typedef T ConstReturnT;
+
+                // Basic
+                ReturnT operator[](std::size_t i) const
+                { assert(i < Merged::n); return Op::run(*mLhs, (*mRhs)[i]); }
+
+                // Extensions
+                void init(const LhsT& lhs, const RhsT& rhs)
+                { mLhs = &lhs; mRhs = &rhs; }
+            };
+
+        };
+
     } // namespace vec
 
     // Template to create Vecs based on expressions
@@ -183,6 +222,13 @@ namespace oglml {
         typedef typename vec::MergeInfoAndType<Op, I, T>::Result MergedInfo;
         typedef Vec<MergedInfo::n, typename MergedInfo::T,
         vec::LhsExpressionStorage<Op, I, T> > Result;
+    };
+
+    template <class Op, typename T, class I>
+    struct CreateRhsExpressionVec {
+        typedef typename vec::MergeTypeAndInfo<Op, T, I>::Result MergedInfo;
+        typedef Vec<MergedInfo::n, typename MergedInfo::T,
+        vec::RhsExpressionStorage<Op, T, I> > Result;
     };
 
 } // namespace oglml
