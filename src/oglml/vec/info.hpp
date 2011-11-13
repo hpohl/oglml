@@ -7,47 +7,58 @@
 #include <oglml/helpers/compilerinfo.hpp>
 
 namespace oglml {
+
+    // Base vec
+    struct BaseVec { };
+
     namespace vec {
         namespace detail {
 
-            // Template to collect Vec informations
-            template <std::size_t tn, typename tT, class tSP>
-            struct VecInfo {
-                oglml_constexpr static std::size_t n = tn;
-                typedef tT T;
-                typedef tSP SP;
+            // Available vec types
+            struct BaseSwizzler { };
+            struct DummyVec : public BaseVec { };
 
-                // Prepare information
-                typedef typename SP::template Container<n, T> Container;
-                typedef typename Container::ReturnT ReturnT;
-                typedef typename Container::ConstReturnT ConstReturnT;
+            namespace isvec {
+
+                template <bool b, typename R>
+                struct Run { };
+
+                template <typename R>
+                struct Run<true, R> {
+                    typedef R Result;
+                };
+
+                template <typename R, bool b>
+                struct RRun { };
+
+                template <typename R>
+                struct RRun<R, true> {
+                    typedef R Result;
+                };
+
+            } // namespace isvec
+
+            template <typename R, typename T1, typename T2 = DummyVec>
+            struct VecFunc : public isvec::Run<(std::is_base_of<BaseVec, T1>::value ||
+                                                std::is_base_of<BaseSwizzler, T1>::value) &&
+                                               (std::is_base_of<BaseVec, T2>::value ||
+                                                std::is_base_of<BaseSwizzler, T2>::value), R>
+            { };
+
+            template <typename T1, typename T2 = DummyVec>
+            struct IsVec {
+                oglml_constexpr static bool result = (std::is_base_of<BaseVec, T1>::value ||
+                                                      std::is_base_of<BaseSwizzler, T1>::value) &&
+                                                     (std::is_base_of<BaseVec, T2>::value ||
+                                                      std::is_base_of<BaseSwizzler, T2>::value);
             };
 
-            // Template to collect informations for swizzlers
-            template <std::size_t tn, typename tT, class tHost,
-                      typename tReturnT, typename tConstReturnT>
-            struct HostInfo {
-                oglml_constexpr static std::size_t n = tn;
-
-                typedef tT T;
-                typedef tHost Host;
-                typedef Host Container;
-                typedef tReturnT ReturnT;
-                typedef tConstReturnT ConstReturnT;
-            };
-
-            template <class ExprInfo>
-            struct ExprInfo2HostInfo {
-                typedef Expression<ExprInfo> ExprType;
-
-                typedef HostInfo<
-                    ExprInfo::n,
-                    typename ExprInfo::T,
-                    ExprType,
-                    typename ExprInfo::ReturnT,
-                    typename ExprInfo::ConstReturnT
-                > Result;
-            };
+            template <typename T1, typename T2, typename R>
+            struct RVecFunc : public isvec::RRun<R, (std::is_base_of<BaseVec, T1>::value ||
+                                                 std::is_base_of<BaseSwizzler, T1>::value) &&
+                                                (std::is_base_of<BaseVec, T2>::value ||
+                                                 std::is_base_of<BaseSwizzler, T2>::value)>
+             { };
 
         } // namespace detail
     } // namespace vec

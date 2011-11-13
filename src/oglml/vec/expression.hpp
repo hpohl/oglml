@@ -11,54 +11,6 @@
 namespace oglml {
 
     namespace vec {
-
-        // Belongs to Expression
-        namespace expression {
-            // Basic struct to collect data
-            template <std::size_t tn, typename tT, class tDerived, typename tReturnT, typename tConstReturnT>
-            struct Info {
-                oglml_constexpr static std::size_t n = tn;
-
-                typedef tT T;
-                typedef tDerived Derived;
-                typedef tReturnT ReturnT;
-                typedef tConstReturnT ConstReturnT;
-            };
-        } // namespace expression
-
-        // Expression
-        struct BaseExpression { };
-
-        template <class Info>
-        class Expression : public BaseExpression {
-        public:
-            oglml_constexpr static std::size_t n = Info::n;
-
-            typedef typename Info::T T;
-            typedef typename Info::Derived Derived;
-            typedef typename Info::ReturnT ReturnT;
-            typedef typename Info::ConstReturnT ConstReturnT;
-
-        private:
-            // Helper meths to downcast
-            Derived& down()
-            { return *static_cast<Derived*>(this); }
-
-            const Derived& down() const
-            { return *static_cast<const Derived*>(this); }
-
-        public:
-
-            // Every derived has to implement the index operators
-            ReturnT operator[](std::size_t i)
-            { return down()[i]; }
-
-            ConstReturnT operator[](std::size_t i) const
-            { return down()[i]; }
-
-        };
-
-
         // -----------------------------------------
         // Forward declarations
         template <class, class, class>
@@ -88,120 +40,105 @@ namespace oglml {
 
         } // namespace merge
 
-        template <class Op, class I1, class I2>
-        struct MergeInfo {
-            typedef expression::Info<
-            merge::MergeDimensions<I1::n, I2::n>::result,
-            typename merge::MergeTypes<Op, typename I1::T, typename I2::T>::Result,
-            ExpressionStorage<Op, typename I1::T, typename I2::T>,
-            typename merge::MergeTypes<Op, typename I1::T, typename I2::T>::Result,
-            typename merge::MergeTypes<Op, typename I1::T, typename I2::T>::Result
-            > Result;
+        template <class Op, typename Tlhs, typename Trhs>
+        struct MergeVecs {
+            oglml_constexpr static std::size_t n =
+                    merge::MergeDimensions<Tlhs::n, Trhs::n>::result;
+            typedef typename merge::MergeTypes<Op, typename Tlhs::T, typename Trhs::T>::Result  T;
+            typedef T ReturnT;
+            typedef T ConstReturnT;
         };
 
-        template <class Op, class I, typename T>
-        struct MergeInfoAndType {
-            typedef expression::Info<
-            I::n,
-            typename merge::MergeTypes<Op, typename I::T, T>::Result,
-            ExpressionStorage<Op, typename I::T, T>,
-            typename merge::MergeTypes<Op, typename I::T, T>::Result,
-            typename merge::MergeTypes<Op, typename I::T, T>::Result
-            > Result;
+        template <class Op, typename Tlhs, typename Trhs>
+        struct MergeVecAndType {
+            oglml_constexpr static std::size_t n = Tlhs::n;
+            typedef typename merge::MergeTypes<Op, typename Tlhs::T, Trhs>::Result T;
+            typedef T ReturnT;
+            typedef T ConstReturnT;
         };
 
-
-        template <class Op, typename T, class I>
-        struct MergeTypeAndInfo {
-            typedef expression::Info<
-            I::n,
-            typename merge::MergeTypes<Op, T, typename I::T>::Result,
-            ExpressionStorage<Op, typename I::T, T>,
-            typename merge::MergeTypes<Op, T, typename I::T>::Result,
-            typename merge::MergeTypes<Op, T, typename I::T>::Result
-            > Result;
+        template <class Op, typename Tlhs, typename Trhs>
+        struct MergeTypeAndVec {
+            oglml_constexpr static std::size_t n = Trhs::n;
+            typedef typename merge::MergeTypes<Op, Tlhs, typename Trhs::T>::Result T;
+            typedef T ReturnT;
+            typedef T ConstReturnT;
         };
 
         // Storage policies
-        template <class Op, class Ilhs, class Irhs>
+        template <class Op, class Tlhs, class Trhs>
         struct ExpressionStorage {
 
             template <std::size_t n, typename T>
             class Container {
-                typedef vec::Expression<Ilhs> LhsT;
-                typedef vec::Expression<Irhs> RhsT;
-                typedef typename MergeInfo<Op, Ilhs, Irhs>::Result Merged;
+                typedef MergeVecs<Op, Tlhs, Trhs> Merged;
 
-                const LhsT* mLhs;
-                const RhsT* mRhs;
+                const Tlhs* mLhs;
+                const Trhs* mRhs;
 
             public:
                 // Typedefs
-                typedef T ReturnT;
-                typedef T ConstReturnT;
+                typedef typename Merged::ReturnT ReturnT;
+                typedef typename Merged::ReturnT ConstReturnT;
 
                 // Basic
-                ReturnT operator[](std::size_t i) const
+                const ReturnT operator[](std::size_t i) const
                 { assert(i < Merged::n); return Op::run(((*mLhs)[i]), (*mRhs)[i]); }
 
                 // Extensions
-                void init(const LhsT& lhs, const RhsT& rhs)
+                void init(const Tlhs& lhs, const Trhs& rhs)
                 { mLhs = &lhs; mRhs = &rhs; }
             };
 
         };
 
-        template <class Op, class Ilhs, typename Trhs>
+        template <class Op, class Tlhs, class Trhs>
         struct LhsExpressionStorage {
 
             template <std::size_t n, typename T>
             class Container {
-                typedef vec::Expression<Ilhs> LhsT;
-                typedef Trhs RhsT;
-                typedef typename MergeInfoAndType<Op, Ilhs, Trhs>::Result Merged;
+                typedef MergeVecAndType<Op, Tlhs, Trhs> Merged;
 
-                const LhsT* mLhs;
-                const RhsT* mRhs;
+                const Tlhs* mLhs;
+                const Trhs* mRhs;
 
             public:
                 // Typedefs
-                typedef T ReturnT;
-                typedef T ConstReturnT;
+                typedef typename Merged::ReturnT ReturnT;
+                typedef typename Merged::ReturnT ConstReturnT;
 
                 // Basic
-                ReturnT operator[](std::size_t i) const
-                { assert(i < Merged::n); return Op::run(((*mLhs)[i]), *mRhs); }
+                const ReturnT operator[](std::size_t i) const
+                { assert(i < Merged::n); return Op::run(((*mLhs)[i]), (*mRhs)); }
 
                 // Extensions
-                void init(const LhsT& lhs, const RhsT& rhs)
+                void init(const Tlhs& lhs, const Trhs& rhs)
                 { mLhs = &lhs; mRhs = &rhs; }
             };
 
         };
 
-        template <class Op, typename Tlhs, class Irhs>
+        template <class Op, class Tlhs, class Trhs>
         struct RhsExpressionStorage {
 
             template <std::size_t n, typename T>
             class Container {
-                typedef Tlhs LhsT;
-                typedef vec::Expression<Irhs> RhsT;
-                typedef typename MergeTypeAndInfo<Op, Tlhs, Irhs>::Result Merged;
+                typedef MergeTypeAndVec<Op, Tlhs, Trhs> Merged;
 
-                const LhsT* mLhs;
-                const RhsT* mRhs;
+                const Tlhs* mLhs;
+                const Trhs* mRhs;
 
             public:
                 // Typedefs
-                typedef T ReturnT;
-                typedef T ConstReturnT;
+                typedef typename Merged::ReturnT ReturnT;
+                typedef typename Merged::ReturnT ConstReturnT;
 
                 // Basic
-                ReturnT operator[](std::size_t i) const
-                { assert(i < Merged::n); return Op::run(*mLhs, (*mRhs)[i]); }
+                const ReturnT operator[](std::size_t i) const
+                { assert(i < Merged::n); return Op::run((*mLhs), (*mRhs)[i]); }
 
                 // Extensions
-                void init(const LhsT& lhs, const RhsT& rhs)
+                void init(const Tlhs& lhs, const Trhs& rhs)
                 { mLhs = &lhs; mRhs = &rhs; }
             };
 
@@ -210,25 +147,25 @@ namespace oglml {
     } // namespace vec
 
     // Template to create Vecs based on expressions
-    template <class Op, class I1, class I2>
+    template <class Op, class Tlhs, class Trhs>
     struct CreateExpressionVec {
-        typedef typename vec::MergeInfo<Op, I1, I2>::Result MergedInfo;
-        typedef Vec<MergedInfo::n, typename MergedInfo::T,
-        vec::ExpressionStorage<Op, I1, I2> > Result;
+        typedef typename vec::MergeVecs<Op, Tlhs, Trhs> Merged;
+        typedef Vec<Merged::n, typename Merged::T,
+        vec::ExpressionStorage<Op, Tlhs, Trhs> > Result;
     };
 
-    template <class Op, class I, typename T>
+    template <class Op, class Tlhs, class Trhs>
     struct CreateLhsExpressionVec {
-        typedef typename vec::MergeInfoAndType<Op, I, T>::Result MergedInfo;
-        typedef Vec<MergedInfo::n, typename MergedInfo::T,
-        vec::LhsExpressionStorage<Op, I, T> > Result;
+        typedef typename vec::MergeVecAndType<Op, Tlhs, Trhs> Merged;
+        typedef Vec<Merged::n, typename Merged::T,
+        vec::LhsExpressionStorage<Op, Tlhs, Trhs> > Result;
     };
 
-    template <class Op, typename T, class I>
+    template <class Op, class Tlhs, class Trhs>
     struct CreateRhsExpressionVec {
-        typedef typename vec::MergeTypeAndInfo<Op, T, I>::Result MergedInfo;
-        typedef Vec<MergedInfo::n, typename MergedInfo::T,
-        vec::RhsExpressionStorage<Op, T, I> > Result;
+        typedef typename vec::MergeTypeAndVec<Op, Tlhs, Trhs> Merged;
+        typedef Vec<Merged::n, typename Merged::T,
+        vec::RhsExpressionStorage<Op, Tlhs, Trhs> > Result;
     };
 
 } // namespace oglml

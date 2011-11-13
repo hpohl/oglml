@@ -2,6 +2,7 @@
 #define OGLML_VEC_STORAGEPOLICIES_SWIZZLER_HPP
 
 #include <vector>
+#include <algorithm>
 
 #include <cstddef>
 #include <cassert>
@@ -22,20 +23,36 @@ namespace oglml {
 
             public:
                 // Typedefs
-                typedef T& ReturnT;
-                typedef const T& ConstReturnT;
+                typedef typename Host::ReturnT ReturnT;
+                typedef typename Host::ConstReturnT ConstReturnT;
+
+                // Helpers
+                bool valid() const {
+                    for (std::size_t i = 0; i < n; ++i) {
+                        if (mIndices[i] >= Host::n)
+                            return false;
+                    }
+                    return true;
+                }
+
+                bool duplicates() const {
+                    for (std::size_t i = 0; i < n; ++i) {
+                        for (std::size_t j = 0; j < n; ++j) {
+                            if ((j != i) && (mIndices[i] == mIndices[j]))
+                                return true;
+                        }
+                    }
+                    return false;
+                }
 
                 // Basic
                 ReturnT operator[](std::size_t i)
-                { assert(i < n); return (*mHost)[mIndices[i]]; }
+                { assert((i < n) && valid()); return (*mHost)[mIndices[i]]; }
 
                 ConstReturnT operator[](std::size_t i) const
-                { assert(i < n); return (*mHost)[mIndices[i]]; }
+                { assert((i < n) && valid()); return (*mHost)[mIndices[i]]; }
 
                 // Extensions
-                void setHost(Host* h)
-                { mHost = h; }
-
                 void setHost(const Host* h)
                 { mHost = const_cast<Host*>(h); }
 

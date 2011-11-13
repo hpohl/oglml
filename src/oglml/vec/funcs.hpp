@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include <oglml/vec/info.hpp>
 #include <oglml/vec/expression.hpp>
 #include <oglml/vec/swizzlerfwd.hpp>
 #include <oglml/helpers/errors.hpp>
@@ -18,23 +19,32 @@ namespace oglml {
         template <std::size_t begin>
         struct Assignment {
 
-            template <class I, typename... Args>
-            static typename std::enable_if<sizeof...(Args) == 0>::type run
-            (const vec::Expression<I>&, const Args&...) {
-                static_assert(begin == I::n, "Not enough assignment parameters.");
+            template <class Tex, typename... Args>
+            static typename std::enable_if<!sizeof...(Args)>::type run
+            (const Tex&, const Args&...) {
+                static_assert(begin == Tex::n, "Not enough assignment parameters.");
             }
 
-            template <class Iex, class Iv, typename... Args>
-            static void run(vec::Expression<Iex>& ex,
-                            const vec::Expression<Iv>& v, const Args&... args) {
-                static_assert((begin + Iv::n) <= Iex::n, "Too many assignment parameters.");
-                Assignment<begin + Iv::n>::run(detail::assignArray<begin, Iv::n>(ex, v), args...);
+            template <typename Tex, typename Tv, typename... Args>
+            static typename vec::detail::VecFunc<void, Tv>::Result run(Tex& ex,
+                            const Tv& v, const Args&... args) {
+                static_assert((begin + Tv::n) <= Tex::n, "Too many assignment parameters.");
+                Assignment<begin + Tv::n>::run(detail::assignArray<begin, Tv::n>(ex, v), args...);
             }
 
-            template <class I, typename First, typename... Args>
-            static typename std::enable_if<!std::is_base_of<vec::BaseExpression, First>::value>::type run
-            (vec::Expression<I>& ex, const First& first, const Args&... args) {
-                static_assert((begin + 1) <= I::n, "Too many assignment parameters.");
+            template <class Tex, typename First, typename... Args>
+            static typename std::enable_if
+            <!vec::detail::IsVec<First>::result && !sizeof...(Args) && begin == 0>::type
+            run(Tex& ex, const First& first, const Args&... args) {
+                static_assert(Tex::n > 0, "Too many assignment parameters.");
+                detail::assignValue<Tex::n>(ex, first);
+            }
+
+            template <class Tex, typename First, typename... Args>
+            static typename std::enable_if
+            <!vec::detail::IsVec<First>::result && ((sizeof...(Args) > 0) || (begin + 1 == Tex::n))>::type
+            run(Tex& ex, const First& first, const Args&... args) {
+                static_assert((begin + 1) <= Tex::n, "Too many assignment parameters.");
                 ex[begin] = first;
                 Assignment<begin + 1>::run(ex, args...);
             }
@@ -42,16 +52,17 @@ namespace oglml {
 
     } // namespace nassign
 
-    template <class I, typename First, typename... Args>
-    vec::Expression<I>& assign(vec::Expression<I>& ex, const First& first, const Args&... args)
+    template <class Tex, typename First, typename... Args>
+    typename vec::detail::VecFunc<Tex&, Tex>::Result
+    assign(Tex& ex, const First& first, const Args&... args)
     { nassign::Assignment<0>::run(ex, first, args...); return ex; }
 
     // Print
-    template <class I>
-    void print(const vec::Expression<I>& ex) {
-        for (std::size_t i = 0; i < I::n; ++i) {
-            std::cout << ex[i];
-            if (i < I::n - 1)
+    template <class T>
+    typename oglml::vec::detail::VecFunc<void, T>::Result print(const T& vec) {
+        for (std::size_t i = 0; i < T::n; ++i) {
+            std::cout << vec[i];
+            if (i < T::n - 1)
                 std::cout << ", ";
         }
         std::cout << std::endl;
