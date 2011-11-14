@@ -4,6 +4,8 @@
 #include <cstddef>
 
 #include <oglml/vec/expression.hpp>
+#include <oglml/helpers/select.hpp>
+#include <oglml/helpers/traits.hpp>
 #include <oglml/helpers/compilerinfo.hpp>
 
 namespace oglml {
@@ -16,7 +18,9 @@ namespace oglml {
 
             // Available vec types
             struct BaseSwizzler { };
-            struct DummyVec : public BaseVec { };
+            struct DummyVec : public BaseVec {
+                oglml_constexpr static std::size_t n = 2;
+            };
 
             namespace isvec {
 
@@ -52,6 +56,18 @@ namespace oglml {
                                                      (std::is_base_of<BaseVec, T2>::value ||
                                                       std::is_base_of<BaseSwizzler, T2>::value);
             };
+
+            template <typename T1, typename T2 = DummyVec>
+            struct HasMultipleDim {
+                oglml_constexpr static bool result = (T1::n > 1) && (T2::n > 1);
+            };
+
+            template <typename T1, typename T2 = DummyVec>
+            struct IsMVec {
+                oglml_constexpr static bool result = oglml::Select<IsVec<T1, T2>::result,
+                HasMultipleDim<T1, T2>, oglml::detail::False>::Result::result;
+            };
+
 
             template <typename T1, typename T2, typename R>
             struct RVecFunc : public isvec::RRun<R, (std::is_base_of<BaseVec, T1>::value ||

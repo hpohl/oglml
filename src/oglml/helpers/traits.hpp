@@ -1,9 +1,19 @@
 #ifndef OGLML_HELPERS_TRAITS_HPP
 #define OGLML_HELPERS_TRAITS_HPP
 
+#include <oglml/helpers/compilerinfo.hpp>
+
 namespace oglml {
 
     namespace detail {
+
+        struct True {
+            oglml_constexpr static bool result = true;
+        };
+
+        struct False {
+            oglml_constexpr static bool result = false;
+        };
 
         template <typename T, typename...>
         struct GetFirst {
