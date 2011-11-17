@@ -76,7 +76,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Tlhs::n != 1 && vec::detail::IsVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
+    !vec::detail::IsMVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
     operator-(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
@@ -86,7 +87,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Tlhs::n != 1 && vec::detail::IsVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
+    !vec::detail::IsMVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
     operator*(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
@@ -96,7 +98,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Tlhs::n != 1 && vec::detail::IsVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
+    !vec::detail::IsMVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
     operator/(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
@@ -106,7 +109,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Tlhs::n != 1 && vec::detail::IsVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
+    !vec::detail::IsMVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
     operator%(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
@@ -128,7 +132,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Trhs::n != 1 && vec::detail::IsVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
+    !vec::detail::IsMVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
     operator-(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
@@ -138,7 +143,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Trhs::n != 1 && vec::detail::IsVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
+    !vec::detail::IsMVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
     operator*(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
@@ -148,7 +154,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Trhs::n != 1 && vec::detail::IsVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
+    !vec::detail::IsMVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
     operator/(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
@@ -158,7 +165,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<Trhs::n != 1 && vec::detail::IsVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
+    !vec::detail::IsMVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
     operator%(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
