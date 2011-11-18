@@ -21,6 +21,15 @@ namespace oglml {
         return swizz;
     }
 
+    template <class Op, class T, std::size_t... indices, typename First, typename... Args>
+    vec::detail::Swizzler<T, indices...>&
+    opassign(vec::detail::Swizzler<T, indices...>& swizz, const First& first, const Args&... args) {
+        static_assert(!detail::HasDuplicates<indices...>::result,
+                      OGLML_INDEX_DUPLICATES_ERROR_MSG);
+        nopassign::Assignment<0, Op>::run(swizz, first, args...);
+        return swizz;
+    }
+
     namespace vec {
         namespace detail {
 
@@ -46,8 +55,8 @@ namespace oglml {
             private:
 #ifdef OGLML_CXX11_UNRESTRICTED_UNIONS
 
-                Swizzler() = delete;
-                ~Swizzler() = delete;
+                Swizzler() = default;
+                ~Swizzler() = default;
 
 #endif // OGLML_CXX11_UNRESTRICTED_UNIONS
 
@@ -80,9 +89,30 @@ namespace oglml {
                 { return host()[index(i)]; }
 
                 // Assignment operator
-                template <class Tex>
-                typename vec::detail::VecFunc<ThisType&, Tex>::Result operator=(const Tex& rhs)
+                template <class Trhs>
+                ThisType& operator=(const Trhs& rhs)
                 { noDuplicates(); return assign(*this, rhs); }
+
+                // Op assignment operator
+                template <class Trhs>
+                ThisType& operator+=(const Trhs& rhs)
+                { noDuplicates(); return opassign<Plus>(*this, rhs); }
+
+                template <class Trhs>
+                ThisType& operator-=(const Trhs& rhs)
+                { noDuplicates(); return opassign<Minus>(*this, rhs); }
+
+                template <class Trhs>
+                ThisType& operator*=(const Trhs& rhs)
+                { noDuplicates(); return opassign<Multiplies>(*this, rhs); }
+
+                template <class Trhs>
+                ThisType& operator/=(const Trhs& rhs)
+                { noDuplicates(); return opassign<Divides>(*this, rhs); }
+
+                template <class Trhs>
+                ThisType& operator%=(const Trhs& rhs)
+                { noDuplicates(); return opassign<Modulus>(*this, rhs); }
 
                 // Cast operator
                 operator ReturnT()
@@ -137,6 +167,14 @@ namespace oglml {
     assign(Vec<n, T, vec::SwizzlerStorage<Host> >& vec, const First& first, const Args&... args) {
         assert(!vec.data.duplicates());
         nassign::Assignment<0>::run(vec, first, args...);
+        return vec;
+    }
+
+    template <class Op, std::size_t n, typename T, class Host, typename First, typename... Args>
+    Vec<n, T, vec::SwizzlerStorage<Host> >&
+    opassign(Vec<n, T, vec::SwizzlerStorage<Host> >& vec, const First& first, const Args&... args) {
+        assert(!vec.data.duplicates());
+        nopassign::Assignment<0, Op>::run(vec, first, args...);
         return vec;
     }
 

@@ -56,6 +56,32 @@ namespace oglml {
         ThisType& operator=(const Trhs& rhs)
         { return assign(*this, rhs); }
 
+        // Op Assignments
+        // Plus
+        template <typename Trhs>
+        ThisType& operator+=(const Trhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
+
+        template <typename Trhs>
+        ThisType& operator-=(const Trhs& rhs)
+        { return opassign<Minus>(*this, rhs);  }
+
+        template <typename Trhs>
+        ThisType& operator*=(const Trhs& rhs)
+        { return opassign<Multiplies>(*this, rhs);  }
+
+        template <typename Trhs>
+        ThisType& operator/=(const Trhs& rhs)
+        { return opassign<Divides>(*this, rhs);  }
+
+        template <typename Trhs>
+        ThisType& operator%=(const Trhs& rhs)
+        { return opassign<Modulus>(*this, rhs);  }
+
+        // Member funcs
+        oglml_constexpr_if_available static std::size_t length()
+        { return n; }
+
         // Swizzlers + data
         union {
             // Contains the data, public accessable

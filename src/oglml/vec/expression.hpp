@@ -144,6 +144,29 @@ namespace oglml {
 
         };
 
+        template <class Op, class Tvec>
+        struct CalcExpressionStorage {
+
+            template <std::size_t n, typename T>
+            class Container {
+                const Tvec* mVec;
+
+            public:
+                // Typedefs
+                typedef decltype(Op::run(std::declval<typename Tvec::ConstReturnT>())) ReturnT;
+                typedef ReturnT ConstReturnT;
+
+                // Basic
+                const ReturnT operator[](std::size_t i) const
+                { assert(i < Tvec::n); return Op::run((*mVec)[i]); }
+
+                // Extensions
+                void init(const Tvec& v)
+                { mVec = &v; }
+            };
+
+        };
+
     } // namespace vec
 
     // Template to create Vecs based on expressions
@@ -166,6 +189,12 @@ namespace oglml {
         typedef typename vec::MergeTypeAndVec<Op, Tlhs, Trhs> Merged;
         typedef Vec<Merged::n, typename Merged::T,
         vec::RhsExpressionStorage<Op, Tlhs, Trhs> > Result;
+    };
+
+    template <class Op, class Tvec>
+    struct CreateCalcExpressionVec {
+        typedef Vec<Tvec::n, typename Tvec::T,
+        vec::CalcExpressionStorage<Op, Tvec> > Result;
     };
 
 } // namespace oglml
