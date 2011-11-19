@@ -33,6 +33,10 @@ namespace oglml {
         typedef typename Container::ReturnT ReturnT;
         typedef typename Container::ConstReturnT ConstReturnT;
 
+    private:
+
+    public:
+
         // Ctor and Dtor
         Vec()
         { }
@@ -51,6 +55,14 @@ namespace oglml {
         ConstReturnT operator[](std::size_t i) const
         { return data[i]; }
 
+        // Promotion
+        /*auto operator+() const -> decltype(promote(detail::generate<ThisType>()))
+        { return promote(*this); }
+
+        // Negation
+        auto operator-() const -> decltype(negate(detail::generate<ThisType>()))
+        { return negate(*this); }*/
+
         // Assignment operator
         template <typename Trhs>
         ThisType& operator=(const Trhs& rhs)
@@ -64,19 +76,19 @@ namespace oglml {
 
         template <typename Trhs>
         ThisType& operator-=(const Trhs& rhs)
-        { return opassign<Minus>(*this, rhs);  }
+        { return opassign<Minus>(*this, rhs); }
 
         template <typename Trhs>
         ThisType& operator*=(const Trhs& rhs)
-        { return opassign<Multiplies>(*this, rhs);  }
+        { return opassign<Multiplies>(*this, rhs); }
 
         template <typename Trhs>
         ThisType& operator/=(const Trhs& rhs)
-        { return opassign<Divides>(*this, rhs);  }
+        { return opassign<Divides>(*this, rhs); }
 
         template <typename Trhs>
         ThisType& operator%=(const Trhs& rhs)
-        { return opassign<Modulus>(*this, rhs);  }
+        { return opassign<Modulus>(*this, rhs); }
 
         // Member funcs
         oglml_constexpr_if_available static std::size_t length()
@@ -185,7 +197,7 @@ namespace oglml {
             vec::detail::Swizzler<ThisType, 3, 3, 3> www, aaa, qqq;
 
             // Four indices
-            vec::detail::Swizzler<ThisType, 0, 0, 0, 0> xxxx, rrrr, ssss;
+            /*vec::detail::Swizzler<ThisType, 0, 0, 0, 0> xxxx, rrrr, ssss;
             vec::detail::Swizzler<ThisType, 0, 0, 0, 1> xxxy, rrrg, ssst;
             vec::detail::Swizzler<ThisType, 0, 0, 0, 2> xxxz, rrrb, sssp;
             vec::detail::Swizzler<ThisType, 0, 0, 0, 3> xxxw, rrra, sssq;
@@ -443,7 +455,7 @@ namespace oglml {
             vec::detail::Swizzler<ThisType, 3, 3, 3, 0> wwwx, aaar, qqqs;
             vec::detail::Swizzler<ThisType, 3, 3, 3, 1> wwwy, aaag, qqqt;
             vec::detail::Swizzler<ThisType, 3, 3, 3, 2> wwwz, aaab, qqqp;
-            vec::detail::Swizzler<ThisType, 3, 3, 3, 3> wwww, aaaa, qqqq;
+            vec::detail::Swizzler<ThisType, 3, 3, 3, 3> wwww, aaaa, qqqq;*/
         };
     };
 
@@ -473,6 +485,7 @@ namespace oglml {
         typedef Vec<2, double> dvec2;
         typedef Vec<3, double> dvec3;
         typedef Vec<4, double> dvec4;
+
     } // namespace glsl
 
 } // namespace oglml

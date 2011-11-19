@@ -1,20 +1,19 @@
 #include <oglml/vec.hpp>
+#include <oglml/mat.hpp>
 
 // Include
 using namespace oglml::glsl;
 
 int main() {
+    mat2x2 m1;
     vec3 v1(1.0, 2.0, 3.0);
     vec3 v2(1.0, 2.0, 3.0);
-    vec3 r(1.0);
 
-    /*r = (((v1 + v2).xy + v2.x).rr + v1.gb).x;
-    r = v1.x;*/
-    //r = v1 + v2;
+    m1[0] = vec2(1.0, 2.0);
 
-    //r.x = 1.0;
+    print(m1[0]);
 
-    print(r);
+    std::cout << (1.0 != v2) << std::endl;
 
     return 0;
 }

@@ -6,6 +6,8 @@
 #include <cmath>
 #include <cstddef>
 
+#include <oglml/helpers/constants.hpp>
+
 namespace oglml {
 
     // Mathematical ops
@@ -66,16 +68,64 @@ namespace oglml {
     };
 
     // Single argument ops
+    struct Radians {
+        template <typename T>
+        static auto run(const T& v) -> decltype((pi / 180.0) * v)
+        { return (pi / 180.0) * v; }
+    };
+
+    struct Degrees {
+        template <typename T>
+        static auto run(const T& v) -> decltype((180.0 / pi) * v)
+        { return (180.0 / pi) * v; }
+    };
+
+    struct Promotion {
+        template <typename T>
+        static auto run(const T& v) -> decltype(+v)
+        { return +v; }
+    };
+
+    struct Negation {
+        template <typename T>
+        static auto run(const T& v) -> decltype(-v)
+        { return -v; }
+    };
+
     struct Exp {
         template <typename T>
         static auto run(const T& v) -> decltype(std::exp(v))
         { return std::exp(v); }
     };
 
+    struct Exp2 {
+        template <typename T>
+        static auto run(const T& v) -> decltype(std::exp2(v))
+        { return std::exp2(v); }
+    };
+
     struct Log {
         template <typename T>
         static auto run(const T& v) -> decltype(std::log(v))
         { return std::log(v); }
+    };
+
+    struct Log2 {
+        template <typename T>
+        static auto run(const T& v) -> decltype(std::log2(v))
+        { return std::log2(v); }
+    };
+
+    struct Sqrt {
+        template <typename T>
+        static auto run(const T& v) -> decltype(std::sqrt(v))
+        { return std::sqrt(v); }
+    };
+
+    struct InverseSqrt {
+        template <typename T>
+        static auto run(const T& v) -> decltype(std::sqrt(v))
+        { return static_cast<T>(1.0) / std::sqrt(v); }
     };
 
     namespace detail {

@@ -14,7 +14,7 @@ namespace oglml {
     // Expression OP Expression
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs, Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
     typename CreateExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
     operator+(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateExpressionVec<Plus, Tlhs, Trhs>::Result vex;
@@ -24,7 +24,7 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs, Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
     typename CreateExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
     operator-(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateExpressionVec<Minus, Tlhs, Trhs>::Result vex;
@@ -34,7 +34,7 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs, Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
     typename CreateExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
     operator*(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
@@ -44,7 +44,7 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs, Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
     typename CreateExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
     operator/(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateExpressionVec<Divides, Tlhs, Trhs>::Result vex;
@@ -54,7 +54,7 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs, Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
     typename CreateExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
     operator%(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
@@ -65,8 +65,8 @@ namespace oglml {
     // Expression OP value
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
-    !vec::detail::IsMVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
+    !vec::detail::IsVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
     operator+(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Plus, Tlhs, Trhs>::Result vex;
@@ -76,8 +76,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
-    !vec::detail::IsMVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
+    !vec::detail::IsVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
     operator-(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
@@ -87,8 +87,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
-    !vec::detail::IsMVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
+    !vec::detail::IsVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
     operator*(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
@@ -98,8 +98,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
-    !vec::detail::IsMVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
+    !vec::detail::IsVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
     operator/(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
@@ -109,8 +109,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Tlhs>::result &&
-    !vec::detail::IsMVec<Trhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
+    !vec::detail::IsVec<Trhs>::result>::type,
     typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
     operator%(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
@@ -121,8 +121,8 @@ namespace oglml {
     // Value OP expression
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
-    !vec::detail::IsMVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
+    !vec::detail::IsVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
     operator+(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Plus, Tlhs, Trhs>::Result vex;
@@ -132,8 +132,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
-    !vec::detail::IsMVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
+    !vec::detail::IsVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
     operator-(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
@@ -143,8 +143,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
-    !vec::detail::IsMVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
+    !vec::detail::IsVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
     operator*(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
@@ -154,8 +154,8 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
-    !vec::detail::IsMVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
+    !vec::detail::IsVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
     operator/(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
@@ -165,14 +165,25 @@ namespace oglml {
 
     template <class Tlhs, class Trhs>
     const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsMVec<Trhs>::result &&
-    !vec::detail::IsMVec<Tlhs>::result>::type,
+    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
+    !vec::detail::IsVec<Tlhs>::result>::type,
     typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
     operator%(const Tlhs& lhs, const Trhs& rhs) {
         typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
         vex.data.init(lhs, rhs);
         return vex;
     }
+
+
+    // -----------------------------------------------------------------------
+    // Comparison operator
+    template <typename Tlhs, typename Trhs>
+    auto operator==(const Tlhs& lhs, const Trhs& rhs) -> decltype(equal(lhs, rhs))
+    { return equal(lhs, rhs); }
+
+    template <typename Tlhs, typename Trhs>
+    auto operator!=(const Tlhs& lhs, const Trhs& rhs) -> decltype(notEqual(lhs, rhs))
+    { return notEqual(lhs, rhs); }
 
 } // namespace oglml
 

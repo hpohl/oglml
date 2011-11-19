@@ -137,6 +137,10 @@ namespace oglml {
                 oglml_constexpr static bool differs = (forwards != backwards);
             };
 
+            struct NoDupl {
+                oglml_constexpr static bool result = false;
+            };
+
             struct Duplicated {
                 oglml_constexpr static bool result = true;
             };
@@ -165,8 +169,8 @@ namespace oglml {
 
         template <std::size_t... array>
         struct HasDuplicates {
-            oglml_constexpr static bool result =
-                    dupl::HasDuplicates<sizeof...(array) - 1, array...>::result;
+            oglml_constexpr static bool result = Select<sizeof...(array) == 1,
+            dupl::NoDupl, dupl::HasDuplicates<sizeof...(array) - 1, array...> >::Result::result;
         };
 
         // Check for index overflow
