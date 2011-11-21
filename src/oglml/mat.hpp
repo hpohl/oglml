@@ -3,6 +3,7 @@
 
 #include <cstddef>
 
+#include <oglml/vecfwd.hpp>
 #include <oglml/mat/storagepolicies/default.hpp>
 
 namespace oglml {

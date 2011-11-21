@@ -4,8 +4,6 @@
 #include <cstddef>
 #include <cassert>
 
-#include <oglml/vecfwd.hpp>
-
 namespace oglml {
 
     namespace mat {

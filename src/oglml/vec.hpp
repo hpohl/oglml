@@ -22,9 +22,17 @@ namespace oglml {
             typedef tT T;
             oglml_constexpr static std::size_t n = tn;
         };
+
+        template <std::size_t n, typename T, class SP>
+        struct FakeVec : BaseVec, MakeInfo<n, T> {
+            typedef typename SP::template Container<n, T> Container;
+            typedef typename Container::ReturnT ReturnT;
+            typedef typename Container::ConstReturnT ConstReturnT;
+        };
+
     } // namespace detail
 
-    template <std::size_t n, typename T, class SP = vec::DefaultStorage>
+    template <std::size_t n, typename T, class SP>
     class Vec : public BaseVec, public detail::MakeInfo<n, T> {
     public:
         // Typedefs
@@ -34,6 +42,8 @@ namespace oglml {
         typedef typename Container::ConstReturnT ConstReturnT;
 
     private:
+        static ThisType& generate()
+        { return static_cast<ThisType*>(0); }
 
     public:
 
@@ -56,12 +66,12 @@ namespace oglml {
         { return data[i]; }
 
         // Promotion
-        /*auto operator+() const -> decltype(promote(detail::generate<ThisType>()))
+        typename CreateCalcExpressionVec<Promotion, ThisType>::Result operator+() const
         { return promote(*this); }
 
         // Negation
-        auto operator-() const -> decltype(negate(detail::generate<ThisType>()))
-        { return negate(*this); }*/
+        typename CreateCalcExpressionVec<Negation, ThisType>::Result operator-() const
+        { return negate(*this); }
 
         // Assignment operator
         template <typename Trhs>

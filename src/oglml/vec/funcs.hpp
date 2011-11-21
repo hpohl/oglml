@@ -8,12 +8,45 @@
 #include <oglml/vec/info.hpp>
 #include <oglml/vec/expression.hpp>
 #include <oglml/vec/swizzlerfwd.hpp>
+#include <oglml/vec/storagepolicies/default.hpp>
 #include <oglml/helpers/errors.hpp>
 #include <oglml/helpers/indextools.hpp>
 #include <oglml/helpers/operations.hpp>
 #include <oglml/helpers/constants.hpp>
 
 namespace oglml {
+    // Helper makro to do no code duplicates
+#define OGLML_VEC_DEFINE_NONVEC_FUNC(_FUNC_NAME_, _EX_) \
+    template <typename T> \
+    inline const typename \
+    std::enable_if<!vec::detail::IsVec<T>::result, T>::type \
+    _FUNC_NAME_(const T& x) { \
+        return _EX_::run(x); \
+    }
+
+#define OGLML_VEC_DEFINE_EXPR_FUNC(_FUNC_NAME_, _EX_) \
+    template <typename T> \
+    inline const typename detail::GetSecond \
+    <typename std::enable_if<vec::detail::IsVec<T>::result>::type, \
+    typename CreateCalcExpressionVec<_EX_, T>::Result>::Result \
+    _FUNC_NAME_(const T& x) { \
+        typename CreateCalcExpressionVec<_EX_, T>::Result vex; \
+        vex.data.init(x); \
+        return vex; \
+    }
+
+#define OGLML_VEC_DEFINE_2EXPR_FUNC(_FUNC_NAME_, _EX_) \
+    template <typename Tlhs, typename Trhs> \
+    inline const typename std::enable_if< \
+    vec::detail::IsVec<Tlhs, Trhs>::result && (Tlhs::n == Trhs::n), \
+    Vec<Tlhs::n, bool, vec::ExpressionStorage<_EX_, Tlhs, Trhs> > >::type \
+    _FUNC_NAME_(const Tlhs& lhs, const Trhs& rhs) { \
+        Vec<Tlhs::n, bool, vec::ExpressionStorage<_EX_, Tlhs, Trhs> > vex; \
+        vex.data.init(lhs, rhs); \
+        return vex; \
+    }
+
+
     // Vector funcs
 
     // -------------------------------------------------------------------------
@@ -109,11 +142,12 @@ namespace oglml {
     { nopassign::Assignment<0, Op>::run(ex, first, args...); return ex; }
 
     // -------------------------------------------------------------------------
-    // General funcs
+    // General funcs    
     // Compare
     template <class Tlhs, class Trhs>
-    inline const typename oglml::vec::detail::VecFunc<bool, Tlhs, Trhs>::Result
-    equal(const Tlhs& lhs, const Trhs& rhs) {
+    inline const typename std::enable_if<
+    vec::detail::IsVec<Tlhs, Trhs>::result && (Tlhs::n == Trhs::n), bool>::type
+    compare(const Tlhs& lhs, const Trhs& rhs) {
         dimAssert<Tlhs::n, Trhs::n>();
         for (std::size_t i = 0; i < Tlhs::n; ++i) {
             if (lhs[i] != rhs[i])
@@ -125,7 +159,7 @@ namespace oglml {
     template <class Tlhs, typename Trhs>
     inline const typename std::enable_if<
     vec::detail::IsVec<Tlhs>::result && !vec::detail::IsVec<Trhs>::result, bool>::type
-    equal(const Tlhs& lhs, const Trhs& rhs) {
+    compare(const Tlhs& lhs, const Trhs& rhs) {
         for (std::size_t i = 0; i < Tlhs::n; ++i) {
             if (lhs[i] != rhs)
                 return false;
@@ -136,36 +170,25 @@ namespace oglml {
     template <class Tlhs, typename Trhs>
     inline const typename std::enable_if<
     !vec::detail::IsVec<Tlhs>::result && vec::detail::IsVec<Trhs>::result, bool>::type
-    equal(const Tlhs& lhs, const Trhs& rhs) {
+    compare(const Tlhs& lhs, const Trhs& rhs) {
         return equal(rhs, lhs);
     }
 
-    template <typename Tlhs, typename Trhs>
-    inline auto notEqual(const Tlhs& lhs, const Trhs& rhs) -> decltype(!equal(lhs, rhs)) {
-        return !equal(lhs, rhs);
-    }
+    // Equal
+    OGLML_VEC_DEFINE_2EXPR_FUNC(lessThan, LessThan)
+    OGLML_VEC_DEFINE_2EXPR_FUNC(lessThanEqual, LessThanEqual)
+
+    OGLML_VEC_DEFINE_2EXPR_FUNC(greaterThan, GreaterThan)
+    OGLML_VEC_DEFINE_2EXPR_FUNC(greaterThanEqual, GreaterThanEqual)
+
+    OGLML_VEC_DEFINE_2EXPR_FUNC(equal, Equal)
+    OGLML_VEC_DEFINE_2EXPR_FUNC(notEqual, NotEqual)
 
     // Promotion
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Promotion, T>::Result>::Result
-    promote(const T& x) {
-        typename CreateCalcExpressionVec<Promotion, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_EXPR_FUNC(promote, Promotion)
 
     // Negation
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Negation, T>::Result>::Result
-    negate(const T& x) {
-        typename CreateCalcExpressionVec<Negation, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_EXPR_FUNC(negate, Negation)
 
     // Print
     template <class T>
@@ -181,123 +204,60 @@ namespace oglml {
 
     // -------------------------------------------------------------------------
     // GLSL math funcs
-    // Degrees
-    template <typename T>
-    inline const typename
-    std::enable_if<!vec::detail::IsVec<T>::result, T>::type
-    degrees(const T& x) {
-        return Degrees::run(x);
+    // Abs
+    OGLML_VEC_DEFINE_EXPR_FUNC(abs, Abs)
+
+    // Ceil
+    OGLML_VEC_DEFINE_EXPR_FUNC(ceil, Ceil)
+
+    // Cross
+    template <typename T1, typename T2>
+    inline const typename std::enable_if<
+    vec::detail::IsVec<T1, T2>::result && (T1::n == 3) && (T2::n == 3),
+    Vec<3, float> >::type
+    cross(const T1& v1, const T2& v2) {
+        return Vec<3, float, vec::DefaultStorage>(
+                    v1[1] * v2[2] - v2[1] * v1[2],
+                    v1[2] * v2[0] - v2[2] * v1[0],
+                    v1[0] * v2[1] - v2[0] * v1[1]
+                    );
     }
 
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Degrees, T>::Result>::Result
-    degrees(const T& x) {
-        typename CreateCalcExpressionVec<Degrees, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    // Degrees
+    OGLML_VEC_DEFINE_NONVEC_FUNC(degrees, Degrees)
+    OGLML_VEC_DEFINE_EXPR_FUNC(degrees, Degrees)
 
     // Exponentation
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Exp, T>::Result>::Result
-    exp(const T& x) {
-        typename CreateCalcExpressionVec<Exp, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_EXPR_FUNC(exp, Exp)
+    OGLML_VEC_DEFINE_EXPR_FUNC(exp2, Exp2)
 
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Exp2, T>::Result>::Result
-    exp2(const T& x) {
-        typename CreateCalcExpressionVec<Exp2, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    // Floor
+    OGLML_VEC_DEFINE_EXPR_FUNC(floor, Floor)
+
+    // Fract
+    OGLML_VEC_DEFINE_NONVEC_FUNC(fract, Fract)
+    OGLML_VEC_DEFINE_EXPR_FUNC(fract, Fract)
 
     // Inverse sqrt
-    template <typename T>
-    inline const typename
-    std::enable_if<!vec::detail::IsVec<T>::result, T>::type
-    inversesqrt(const T& x)
-    { return InverseSqrt::run(x); }
-
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<InverseSqrt, T>::Result>::Result
-    inversesqrt(const T& x) {
-        typename CreateCalcExpressionVec<InverseSqrt, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_NONVEC_FUNC(inversesqrt, InverseSqrt)
+    OGLML_VEC_DEFINE_EXPR_FUNC(inversesqrt, InverseSqrt)
 
     // Logarithm
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Log, T>::Result>::Result
-    log(const T& x) {
-        typename CreateCalcExpressionVec<Log, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
-
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Log2, T>::Result>::Result
-    log2(const T& x) {
-        typename CreateCalcExpressionVec<Log2, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
-
-    // Pow
-    template <typename Tx, typename Ty>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tx, Ty>::result>::type,
-    typename CreateExpressionVec<Pow, Tx, Ty>::Result>::Result
-    pow(const Tx& x, const Ty& y) {
-        typename CreateExpressionVec<Pow, Tx, Ty>::Result vex;
-        vex.data.init(x, y);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_EXPR_FUNC(log, Log)
+    OGLML_VEC_DEFINE_EXPR_FUNC(log2, Log2)
 
     // Radians
-    template <typename T>
-    inline const typename
-    std::enable_if<!vec::detail::IsVec<T>::result, T>::type
-    radians(const T& x) {
-        return Radians::run(x);
-    }
+    OGLML_VEC_DEFINE_NONVEC_FUNC(radians, Radians)
+    OGLML_VEC_DEFINE_EXPR_FUNC(radians, Radians)
 
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Radians, T>::Result>::Result
-    radians(const T& x) {
-        typename CreateCalcExpressionVec<Radians, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    // Round
+    OGLML_VEC_DEFINE_EXPR_FUNC(round, Round)
 
     // Squareroot
-    template <typename T>
-    inline const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<T>::result>::type,
-    typename CreateCalcExpressionVec<Sqrt, T>::Result>::Result
-    sqrt(const T& x) {
-        typename CreateCalcExpressionVec<Sqrt, T>::Result vex;
-        vex.data.init(x);
-        return vex;
-    }
+    OGLML_VEC_DEFINE_EXPR_FUNC(sqrt, Sqrt)
 
+    // Trunc
+    OGLML_VEC_DEFINE_EXPR_FUNC(trunc, Trunc)
 
 
     // --------------------------------------------------------------------------

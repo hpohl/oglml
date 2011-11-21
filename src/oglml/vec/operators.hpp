@@ -178,12 +178,12 @@ namespace oglml {
     // -----------------------------------------------------------------------
     // Comparison operator
     template <typename Tlhs, typename Trhs>
-    auto operator==(const Tlhs& lhs, const Trhs& rhs) -> decltype(equal(lhs, rhs))
-    { return equal(lhs, rhs); }
+    bool operator==(const Tlhs& lhs, const Trhs& rhs)
+    { return compare(lhs, rhs); }
 
     template <typename Tlhs, typename Trhs>
-    auto operator!=(const Tlhs& lhs, const Trhs& rhs) -> decltype(notEqual(lhs, rhs))
-    { return notEqual(lhs, rhs); }
+    bool operator!=(const Tlhs& lhs, const Trhs& rhs)
+    { return !compare(lhs, rhs); }
 
 } // namespace oglml
 
