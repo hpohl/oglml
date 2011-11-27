@@ -21,6 +21,9 @@ namespace oglml {
                 typedef T& ReturnT;
                 typedef const T& ConstReturnT;
 
+                // Constants
+                oglml_constexpr static bool defineSwizzlers = true;
+
                 // Basic
                 ReturnT operator[](std::size_t i)
                 { assert(i < n); return *mDataPtr[i]; }

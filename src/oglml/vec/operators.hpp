@@ -3,177 +3,41 @@
 
 #include <type_traits>
 
+#include <oglml/vecfwd.hpp>
 #include <oglml/vec/info.hpp>
-#include <oglml/vec/expression.hpp>
 #include <oglml/helpers/operations.hpp>
 #include <oglml/helpers/autoreturn.hpp>
 #include <oglml/helpers/traits.hpp>
 
 namespace oglml {
+
+    namespace detail {
+
+        template <class Op, typename Tlhs, typename Trhs>
+        struct CreateVecOpReturn : private std::enable_if<
+                vec::OneIsVecOrSameDim<Tlhs, Trhs>::result, Empty>::type {
+
+            oglml_constexpr static bool lhsVec = vec::IsVec<Tlhs>::result;
+            oglml_constexpr static bool rhsVec = vec::IsVec<Trhs>::result;
+            oglml_constexpr static bool bothVecs = lhsVec && rhsVec;
+
+            typedef typename Select<lhsVec, Tlhs, Trhs>::Result VecType;
+
+            oglml_constexpr static std::size_t n = VecType::n;
+
+            typedef decltype(Op::run(std::declval<typename Tlhs::T>(),
+                                     std::declval<typename Trhs::T>())) T;
+
+            typedef Vec<n, T> Result;
+        };
+
+    } // namespace detail
+
     // Global operators
-    // Expression OP Expression
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
-    typename CreateExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
+    template <typename Tlhs, typename Trhs>
+    typename detail::CreateVecOpReturn<Plus, Tlhs, Trhs>::Result
     operator+(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateExpressionVec<Plus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
     }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
-    typename CreateExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
-    operator-(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateExpressionVec<Minus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
-    typename CreateExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
-    operator*(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
-    typename CreateExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
-    operator/(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateExpressionVec<Divides, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs, Trhs>::result>::type,
-    typename CreateExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
-    operator%(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    // Expression OP value
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
-    !vec::detail::IsVec<Trhs>::result>::type,
-    typename CreateLhsExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
-    operator+(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateLhsExpressionVec<Plus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
-    !vec::detail::IsVec<Trhs>::result>::type,
-    typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
-    operator-(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateLhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
-    !vec::detail::IsVec<Trhs>::result>::type,
-    typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
-    operator*(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateLhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
-    !vec::detail::IsVec<Trhs>::result>::type,
-    typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
-    operator/(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateLhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Tlhs>::result &&
-    !vec::detail::IsVec<Trhs>::result>::type,
-    typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
-    operator%(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateLhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    // Value OP expression
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
-    !vec::detail::IsVec<Tlhs>::result>::type,
-    typename CreateRhsExpressionVec<Plus, Tlhs, Trhs>::Result>::Result
-    operator+(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateRhsExpressionVec<Plus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
-    !vec::detail::IsVec<Tlhs>::result>::type,
-    typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result>::Result
-    operator-(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateRhsExpressionVec<Minus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
-    !vec::detail::IsVec<Tlhs>::result>::type,
-    typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result>::Result
-    operator*(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateRhsExpressionVec<Multiplies, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
-    !vec::detail::IsVec<Tlhs>::result>::type,
-    typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result>::Result
-    operator/(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateRhsExpressionVec<Divides, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
-    template <class Tlhs, class Trhs>
-    const typename detail::GetSecond
-    <typename std::enable_if<vec::detail::IsVec<Trhs>::result &&
-    !vec::detail::IsVec<Tlhs>::result>::type,
-    typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result>::Result
-    operator%(const Tlhs& lhs, const Trhs& rhs) {
-        typename CreateRhsExpressionVec<Modulus, Tlhs, Trhs>::Result vex;
-        vex.data.init(lhs, rhs);
-        return vex;
-    }
-
 
     // -----------------------------------------------------------------------
     // Comparison operator

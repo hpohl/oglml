@@ -3,71 +3,59 @@
 
 #include <cstddef>
 
-#include <oglml/vec/expression.hpp>
 #include <oglml/helpers/select.hpp>
 #include <oglml/helpers/traits.hpp>
 #include <oglml/helpers/compilerinfo.hpp>
 
 namespace oglml {
 
-    // Base vec
-    struct BaseVec { };
-
     namespace vec {
         namespace detail {
 
-            // Available vec types
-            struct BaseSwizzler { };
-            struct DummyVec : public BaseVec {
-                oglml_constexpr static std::size_t n = 2;
-            };
+            struct VecIdentifier { };
 
-            namespace isvec {
+        } // namespace detail
+    } // namespace vec
 
-                template <bool b, typename R>
-                struct Run { };
+    template <std::size_t nt, typename Tt>
+    struct BaseVec : public vec::detail::VecIdentifier {
+        oglml_constexpr static std::size_t n = nt;
+        typedef Tt T;
+    };
 
-                template <typename R>
-                struct Run<true, R> {
-                    typedef R Result;
-                };
+    namespace vec {
 
-                template <typename R, bool b>
-                struct RRun { };
+        // Helpers to get vec information
+        template <typename T>
+        struct IsVec {
+            oglml_constexpr static bool result =
+                    std::is_base_of<detail::VecIdentifier, T>::value;
+        };
 
-                template <typename R>
-                struct RRun<R, true> {
-                    typedef R Result;
-                };
+        template <typename T1, typename T2>
+        struct BothAreVecs {
+            oglml_constexpr static bool result = IsVec<T1>::result && IsVec<T2>::result;
+        };
 
-            } // namespace isvec
+        template <typename T1, typename T2>
+        struct OneIsVec {
+            oglml_constexpr static bool result = IsVec<T1>::result || IsVec<T2>::result;
+        };
 
-            template <typename T1, typename T2 = DummyVec>
-            struct HasMultipleDim {
-                oglml_constexpr static bool result = (T1::n > 1) && (T2::n > 1);
-            };
+        template <typename T1, typename T2>
+        struct SameDim {
+            oglml_constexpr static bool conditions = BothAreVecs<T1, T2>::result;
+            oglml_constexpr static bool result = conditions && (T1::n == T2::n);
+        };
 
-            template <typename T1, typename T2 = DummyVec>
-            struct HasVecBase {
-                oglml_constexpr static bool result = (std::is_base_of<BaseVec, T1>::value ||
-                                                      std::is_base_of<BaseSwizzler, T1>::value) &&
-                                                     (std::is_base_of<BaseVec, T2>::value ||
-                                                      std::is_base_of<BaseSwizzler, T2>::value);
-            };
+        template <typename T1, typename T2>
+        struct OneIsVecOrSameDim {
+            oglml_constexpr static bool result =
+                    Select<OneIsVec<T1, T2>::result,
+            SameDim<T1, T2>, oglml::detail::False>::Result::result;
+        };
 
-            template <typename T1, typename T2 = DummyVec>
-            struct IsVec {
-                oglml_constexpr static bool result = oglml::Select<HasVecBase<T1, T2>::result,
-                HasMultipleDim<T1, T2>, oglml::detail::False>::Result::result;
-            };
-
-            template <typename R, typename T1, typename T2 = DummyVec>
-            struct VecFunc : public isvec::Run<IsVec<T1, T2>::result, R>
-            { };
-
-            template <typename T1, typename T2, typename R>
-            struct RVecFunc : public isvec::RRun<R, IsVec<T1, T2>::result>
-            { };
+        namespace detail {
 
         } // namespace detail
     } // namespace vec

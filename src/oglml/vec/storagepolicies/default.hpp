@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cassert>
 
+#include <oglml/helpers/compilerinfo.hpp>
+
 namespace oglml {
 
     namespace vec {
@@ -18,6 +20,9 @@ namespace oglml {
                 // Typedefs
                 typedef T& ReturnT;
                 typedef const T& ConstReturnT;
+
+                // Constants
+                oglml_constexpr static bool defineSwizzlers = true;
 
                 // Basic
                 ReturnT operator[](std::size_t i)

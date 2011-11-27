@@ -7,6 +7,8 @@ namespace oglml {
 
     namespace detail {
 
+        struct Empty { };
+
         struct True {
             oglml_constexpr static bool result = true;
         };

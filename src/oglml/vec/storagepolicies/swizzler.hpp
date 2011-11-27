@@ -23,8 +23,11 @@ namespace oglml {
 
             public:
                 // Typedefs
-                typedef typename Host::ReturnT ReturnT;
-                typedef typename Host::ConstReturnT ConstReturnT;
+                typedef T& ReturnT;
+                typedef const ReturnT ConstReturnT;
+
+                // Constants
+                oglml_constexpr static bool defineSwizzlers = true;
 
                 // Helpers
                 bool valid() const {
