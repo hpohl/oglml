@@ -57,14 +57,33 @@ namespace oglml {
 
     OGLML_DEFINE_OPERATION(Radians, (pi / 180.0) * v)
     OGLML_DEFINE_OPERATION(Degrees, (180.0 / pi) * v)
+
+    OGLML_DEFINE_OPERATION(Sin, std::sin(v))
+    OGLML_DEFINE_OPERATION(Cos, std::cos(v))
+    OGLML_DEFINE_OPERATION(Tan, std::tan(v))
+
+    OGLML_DEFINE_OPERATION(ASin, std::asin(v))
+    OGLML_DEFINE_OPERATION(ACos, std::acos(v))
+    OGLML_DEFINE_OPERATION(ATan, std::atan(v))
+
+    OGLML_DEFINE_OPERATION(SinH, std::sinh(v))
+    OGLML_DEFINE_OPERATION(CosH, std::cosh(v))
+    OGLML_DEFINE_OPERATION(TanH, std::tanh(v))
+
+    OGLML_DEFINE_OPERATION(ASinH, std::asinh(v))
+    OGLML_DEFINE_OPERATION(ACosH, std::acosh(v))
+    OGLML_DEFINE_OPERATION(ATanH, std::atanh(v))
+
     OGLML_DEFINE_OPERATION(Promotion, +v)
     OGLML_DEFINE_OPERATION(Negation, -v)
+
     OGLML_DEFINE_OPERATION(Exp, std::exp(v))
     OGLML_DEFINE_OPERATION(Exp2, std::exp2(v))
     OGLML_DEFINE_OPERATION(Log, std::log(v))
     OGLML_DEFINE_OPERATION(Log2, std::log2(v))
     OGLML_DEFINE_OPERATION(Sqrt, std::sqrt(v))
-    OGLML_DEFINE_OPERATION(InverseSqrt, static_cast<T>(1.0) / std::sqrt(v))
+    OGLML_DEFINE_OPERATION(InverseSqrt, 1.0 / std::sqrt(v))
+
     OGLML_DEFINE_OPERATION(Abs, std::abs(v))
     OGLML_DEFINE_OPERATION(Floor, std::floor(v))
     OGLML_DEFINE_OPERATION(Trunc, std::trunc(v))
@@ -133,10 +152,12 @@ namespace oglml {
         }
 
         // ---------------
-        template <class Op, std::size_t n, typename Tr, typename T1, typename T2>
-        inline void execOp(T1& r, const T1& lhs, const T2& rhs) {
-            for (std::size_t i = 0; i < n; ++i)
-                r[i] = Op::run(lhs, rhs);
+        template <class Op, class Ret, typename T1, typename T2>
+        inline Ret execOp(const T1& lhs, const T2& rhs) {
+            Ret r;
+            for (std::size_t i = 0; i < Ret::n; ++i)
+                r[i] = Op::run(lhs[i], rhs[i]);
+            return r;
         }
 
     } // namespace detail

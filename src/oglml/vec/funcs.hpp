@@ -5,7 +5,24 @@
 
 #include <cmath>
 
+#include <oglml/vec/info.hpp>
+
 namespace oglml {
+
+    namespace detail {
+
+        template <class Op,
+                  std::size_t nlhs, typename Tlhs, class SPlhs,
+                  std::size_t nrhs, typename Trhs, class SPrhs>
+        typename vec::detail::CreateVec<Op, nlhs, Tlhs, SPlhs, nrhs, Trhs, SPrhs>::Result
+        operate(const Vec<nlhs, Tlhs, SPlhs>& lhs, const Vec<nrhs, Trhs, SPrhs>& rhs) {
+            typename vec::detail::CreateVec<Op, nlhs, Tlhs, SPlhs, nrhs, Trhs, SPrhs>::Result ret;
+            for (std::size_t i = 0; i < nlhs; ++i)
+                ret[i] = Op::run(lhs[i], rhs[i]);
+            return ret;
+        }
+
+    } // namespace detail
 
     // -------------------------------------------------------------------------
     // Assignments
@@ -55,6 +72,20 @@ namespace oglml {
 
     // ----------------------------------------------------------------------------
     // General funcs
+    // Compare
+    template <std::size_t nlhs, typename Tlhs, class SPlhs,
+              std::size_t nrhs, typename Trhs, class SPrhs>
+    bool compare(const Vec<nlhs, Tlhs, SPlhs>& lhs,
+                 const Vec<nrhs, Trhs, SPrhs>& rhs) {
+        dimAssert<nlhs, nrhs>();
+        for (std::size_t i = 0; i < nlhs; ++i) {
+            if (lhs[i] != rhs[i])
+                return false;
+        }
+        return true;
+    }
+
+    // Print
     template <std::size_t n, typename T, class SP>
     void print(const Vec<n, T, SP>& v) {
         for (std::size_t i = 0; i < n; ++i) {

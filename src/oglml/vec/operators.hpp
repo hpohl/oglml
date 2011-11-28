@@ -3,50 +3,36 @@
 
 #include <type_traits>
 
-#include <oglml/vecfwd.hpp>
-#include <oglml/vec/info.hpp>
+#include <oglml/helpers/errors.hpp>
 #include <oglml/helpers/operations.hpp>
 #include <oglml/helpers/autoreturn.hpp>
-#include <oglml/helpers/traits.hpp>
+#include <oglml/vec/funcs.hpp>
+#include <oglml/vec/info.hpp>
 
 namespace oglml {
 
-    namespace detail {
+#define OGLML_DEFINE_VEC_OPERATOR(_NAME_, _EX_) \
+    template <std::size_t nlhs, typename Tlhs, class SPlhs, \
+              std::size_t nrhs, typename Trhs, class SPrhs> \
+    auto operator _NAME_(const Vec<nlhs, Tlhs, SPlhs>& lhs, const Vec<nrhs, Trhs, SPrhs>& rhs) \
+    OGLML_AUTO_RETURN(detail::operate<_EX_>(lhs, rhs))
 
-        template <class Op, typename Tlhs, typename Trhs>
-        struct CreateVecOpReturn : private std::enable_if<
-                vec::OneIsVecOrSameDim<Tlhs, Trhs>::result, Empty>::type {
-
-            oglml_constexpr static bool lhsVec = vec::IsVec<Tlhs>::result;
-            oglml_constexpr static bool rhsVec = vec::IsVec<Trhs>::result;
-            oglml_constexpr static bool bothVecs = lhsVec && rhsVec;
-
-            typedef typename Select<lhsVec, Tlhs, Trhs>::Result VecType;
-
-            oglml_constexpr static std::size_t n = VecType::n;
-
-            typedef decltype(Op::run(std::declval<typename Tlhs::T>(),
-                                     std::declval<typename Trhs::T>())) T;
-
-            typedef Vec<n, T> Result;
-        };
-
-    } // namespace detail
-
-    // Global operators
-    template <typename Tlhs, typename Trhs>
-    typename detail::CreateVecOpReturn<Plus, Tlhs, Trhs>::Result
-    operator+(const Tlhs& lhs, const Trhs& rhs) {
-    }
+    OGLML_DEFINE_VEC_OPERATOR(+, Plus)
+    OGLML_DEFINE_VEC_OPERATOR(-, Minus)
+    OGLML_DEFINE_VEC_OPERATOR(*, Multiplies)
+    OGLML_DEFINE_VEC_OPERATOR(/, Divides)
+    OGLML_DEFINE_VEC_OPERATOR(%, Modulus)
 
     // -----------------------------------------------------------------------
     // Comparison operator
-    template <typename Tlhs, typename Trhs>
-    bool operator==(const Tlhs& lhs, const Trhs& rhs)
+    template <std::size_t nlhs, typename Tlhs, class SPlhs,
+              std::size_t nrhs, typename Trhs, class SPrhs>
+    bool operator==(Vec<nlhs, Tlhs, SPlhs>& lhs, const Vec<nrhs, Trhs, SPrhs>& rhs)
     { return compare(lhs, rhs); }
 
-    template <typename Tlhs, typename Trhs>
-    bool operator!=(const Tlhs& lhs, const Trhs& rhs)
+    template <std::size_t nlhs, typename Tlhs, class SPlhs,
+              std::size_t nrhs, typename Trhs, class SPrhs>
+    bool operator!=(Vec<nlhs, Tlhs, SPlhs>& lhs, const Vec<nrhs, Trhs, SPrhs>& rhs)
     { return !compare(lhs, rhs); }
 
 } // namespace oglml

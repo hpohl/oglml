@@ -3,9 +3,11 @@
 
 #include <cstddef>
 
+#include <oglml/helpers/errors.hpp>
 #include <oglml/helpers/select.hpp>
 #include <oglml/helpers/traits.hpp>
 #include <oglml/helpers/compilerinfo.hpp>
+#include <oglml/vecfwd.hpp>
 
 namespace oglml {
 
@@ -33,13 +35,13 @@ namespace oglml {
         };
 
         template <typename T1, typename T2>
-        struct BothAreVecs {
-            oglml_constexpr static bool result = IsVec<T1>::result && IsVec<T2>::result;
+        struct OneIsVec {
+            oglml_constexpr static bool result = IsVec<T1>::result || IsVec<T2>::result;
         };
 
         template <typename T1, typename T2>
-        struct OneIsVec {
-            oglml_constexpr static bool result = IsVec<T1>::result || IsVec<T2>::result;
+        struct BothAreVecs {
+            oglml_constexpr static bool result = IsVec<T1>::result && IsVec<T2>::result;
         };
 
         template <typename T1, typename T2>
@@ -51,11 +53,22 @@ namespace oglml {
         template <typename T1, typename T2>
         struct OneIsVecOrSameDim {
             oglml_constexpr static bool result =
-                    Select<OneIsVec<T1, T2>::result,
-            SameDim<T1, T2>, oglml::detail::False>::Result::result;
+                    Select<BothAreVecs<T1, T2>::result,
+            SameDim<T1, T2>, OneIsVec<T1, T2> >::Result::result;
         };
 
         namespace detail {
+
+            template <class Op,
+                      std::size_t nlhs, typename Tlhs, class SPlhs,
+                      std::size_t nrhs, typename Trhs, class SPrhs>
+            struct CreateVec : private DimCheck<nlhs, nrhs> {
+                oglml_constexpr static std::size_t n = nlhs;
+                typedef decltype(Op::run(std::declval<Tlhs>(), std::declval<Trhs>())) T;
+                typedef vec::DefaultStorage SP;
+
+                typedef Vec<n, T, SP> Result;
+            };
 
         } // namespace detail
     } // namespace vec

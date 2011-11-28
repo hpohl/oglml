@@ -7,6 +7,7 @@
 
 // Enable all C++11 features
 #define OGLML_CXX11_CONSTEXPR
+#define OGLML_CXX11_TEMPLATE_ALIASES
 #define OGLML_CXX11_UNRESTRICTED_UNIONS
 
 // ---------------------------------------
@@ -28,6 +29,7 @@
 # endif
 #endif
 
+#define OGLML_GCC_VERSION_48 40800
 #define OGLML_GCC_VERSION_47 40700
 #define OGLML_GCC_VERSION_46 40600
 #define OGLML_GCC_VERSION_45 40500
@@ -41,6 +43,11 @@
 #define oglml_constexpr const
 #undef oglml_constexpr_if_available
 #define oglml_constexpr_if_available
+#endif
+
+// Template aliases
+#if OGLML_GNUC_VERSION < OGLML_GCC_VERSION_48
+#undef OGLML_CXX11_TEMPLATE_ALIASES
 #endif
 
 // Unrestricted unions

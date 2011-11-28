@@ -4,14 +4,13 @@
 #include <iostream>
 #include <cstddef>
 
-#include <oglml/vecfwd.hpp>
-#include <oglml/vec/info.hpp>
 #include <oglml/vec/storagepolicies/default.hpp>
 #include <oglml/vec/storagepolicies/staticswizzler.hpp>
-#include <oglml/vec/funcs.hpp>
-#include <oglml/vec/operators.hpp>
 #include <oglml/helpers/operations.hpp>
 #include <oglml/helpers/autoreturn.hpp>
+#include <oglml/vec/funcs.hpp>
+#include <oglml/vec/operators.hpp>
+#include <oglml/vecfwd.hpp>
 
 namespace oglml {
     namespace vec {
@@ -475,6 +474,36 @@ namespace oglml {
         typedef Vec<2, double> dvec2;
         typedef Vec<3, double> dvec3;
         typedef Vec<4, double> dvec4;
+
+#ifdef OGLML_CXX11_TEMPLATE_ALIASES
+
+        // Template aliases
+        template <std::size_t n>
+        using vec = Vec<n, float>;
+
+        template <std::size_t n>
+        using ivec = Vec<n, int>;
+
+        template <std::size_t n>
+        using uvec = Vec<n, unsigned int>;
+
+        template <std::size_t n>
+        using bvec = Vec<n, bool>;
+
+        template <std::size_t n>
+        using dvec = Vec<n, double>;
+
+
+        template <typename T>
+        using vec2 = Vec<2, T>;
+
+        template <typename T>
+        using vec3 = Vec<3, T>;
+
+        template <typename T>
+        using vec4 = Vec<4, T>;
+
+#endif // OGLML_CXX11_TEMPLATE_ALIASES
 
     } // namespace glsl
 
