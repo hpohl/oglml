@@ -16,6 +16,27 @@ namespace oglml {
     namespace vec {
         namespace detail {
 
+            template <std::size_t n, typename T, class Container, std::size_t index>
+            class ValueView {
+
+                Container& host()
+                { return *reinterpret_cast<Container*>(this); }
+
+                const Container& host() const
+                { return *reinterpret_cast<const Container*>(this); }
+
+                oglml_constexpr_if_available static void check()
+                { static_assert(index < n, "Invalid index."); }
+
+            public:
+
+                operator T&()
+                { check(); return host()[index]; }
+
+                operator const T&() const
+                { check(); return host()[index]; }
+            };
+
             template <std::size_t n, typename T, class SP>
             struct SwizzlerUnion {
                 typedef typename SP::template Container<n, T> Container;
@@ -25,18 +46,20 @@ namespace oglml {
                 struct DefineSwizzler {
 
                     oglml_constexpr static std::size_t nindices = sizeof...(indices);
-                    oglml_constexpr static bool defineSwizzlers = Container::defineSwizzlers;
 
                     typedef vec::StaticSwizzlerStorage<n, T, SP, indices...> SwizzlerSP;
-                    typedef Vec<nindices, T, SwizzlerSP> VecT;
-
-                    typedef typename Select<defineSwizzlers, VecT, oglml::detail::Empty>::Result Result;
+                    typedef Vec<nindices, T, SwizzlerSP> Result;
                 };
 
                 // Swizzlers + data
                 union {
                     // Contains the data, public accessable
                     Container data;
+
+                    ValueView<n, T, Container, 0> x, r, s;
+                    ValueView<n, T, Container, 1> y, g, t;
+                    ValueView<n, T, Container, 2> z, b, p;
+                    ValueView<n, T, Container, 3> w, a, q;
 
                     // Swizzlers
 #ifdef OGLML_CXX11_UNRESTRICTED_UNIONS
@@ -134,7 +157,7 @@ namespace oglml {
                     typename DefineSwizzler<3, 3, 3>::Result www, aaa, qqq;
 
                     // Four indices
-                    typename DefineSwizzler<0, 0, 0, 0>::Result xxxx, rrrr, ssss;
+                    /*typename DefineSwizzler<0, 0, 0, 0>::Result xxxx, rrrr, ssss;
                     typename DefineSwizzler<0, 0, 0, 1>::Result xxxy, rrrg, ssst;
                     typename DefineSwizzler<0, 0, 0, 2>::Result xxxz, rrrb, sssp;
                     typename DefineSwizzler<0, 0, 0, 3>::Result xxxw, rrra, sssq;
@@ -392,7 +415,7 @@ namespace oglml {
                     typename DefineSwizzler<3, 3, 3, 0>::Result wwwx, aaar, qqqs;
                     typename DefineSwizzler<3, 3, 3, 1>::Result wwwy, aaag, qqqt;
                     typename DefineSwizzler<3, 3, 3, 2>::Result wwwz, aaab, qqqp;
-                    typename DefineSwizzler<3, 3, 3, 3>::Result wwww, aaaa, qqqq;
+                    typename DefineSwizzler<3, 3, 3, 3>::Result wwww, aaaa, qqqq;*/
 
 #endif // OGLML_CXX11_UNRESTRICTED_UNIONS
                 };
@@ -400,7 +423,16 @@ namespace oglml {
 
             template <std::size_t n, typename T, class SP>
             struct JustData {
-                typename SP::template Container<n, T> data;
+                typedef typename SP::template Container<n, T> Container;
+
+                union {
+                    Container data;
+
+                    ValueView<n, T, Container, 0> x, r, s;
+                    ValueView<n, T, Container, 1> y, g, t;
+                    ValueView<n, T, Container, 2> z, b, p;
+                    ValueView<n, T, Container, 3> w, a, q;
+                };
             };
 
             template <std::size_t n, typename T, class SP>
@@ -410,7 +442,6 @@ namespace oglml {
             };
 
         } // namespace detail
-
     } // namespace vec
 
 
@@ -442,6 +473,32 @@ namespace oglml {
 
         const T& operator[](std::size_t i) const
         { return DataImpl::data[i]; }
+
+        // Assignment operator
+        template <typename Rhs>
+        ThisType& operator=(const Rhs& rhs)
+        { return assign(*this, rhs); }
+
+        template <typename Rhs>
+        ThisType& operator-=(const Rhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
+
+        template <typename Rhs>
+        ThisType& operator*=(const Rhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
+
+        template <typename Rhs>
+        ThisType& operator/=(const Rhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
+
+        template <typename Rhs>
+        ThisType& operator%=(const Rhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
+
+        // Operation assignment operators
+        template <typename Rhs>
+        ThisType& operator+=(const Rhs& rhs)
+        { return opassign<Plus>(*this, rhs); }
 
         // Member funcs
         oglml_constexpr_if_available static std::size_t length()

@@ -15,8 +15,10 @@ namespace oglml {
 
     namespace vec {
 
+        struct BaseStaticSwizzlerStorage { };
+
         template <std::size_t nHost, typename THost, class SPHost, std::size_t... tindices>
-        struct StaticSwizzlerStorage {
+        struct StaticSwizzlerStorage : private BaseStaticSwizzlerStorage {
 
             // Constants
             oglml_constexpr static std::size_t indexcount = sizeof...(tindices);

@@ -70,6 +70,29 @@ namespace oglml {
                 typedef Vec<n, T, SP> Result;
             };
 
+            template <class Op,
+                      std::size_t nlhs, typename Tlhs, class SPlhs,
+                      typename Trhs>
+            struct CreateVecFromLhs {
+                oglml_constexpr static std::size_t n = nlhs;
+                typedef decltype(Op::run(std::declval<Tlhs>(), std::declval<Trhs>())) T;
+                typedef vec::DefaultStorage SP;
+
+                typedef Vec<n, T, SP> Result;
+            };
+
+            template <class Op,
+                      typename Tlhs,
+                      std::size_t nrhs, typename Trhs, class SPrhs>
+            struct CreateVecFromRhs {
+                oglml_constexpr static std::size_t n = nrhs;
+                typedef decltype(Op::run(std::declval<Tlhs>(), std::declval<Trhs>())) T;
+                typedef vec::DefaultStorage SP;
+
+                typedef Vec<n, T, SP> Result;
+            };
+
+
         } // namespace detail
     } // namespace vec
 } // namespace oglml

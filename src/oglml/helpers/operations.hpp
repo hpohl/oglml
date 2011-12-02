@@ -55,6 +55,9 @@ namespace oglml {
         { return (_EX_); } \
     };
 
+    OGLML_DEFINE_OPERATION(Promotion, +v)
+    OGLML_DEFINE_OPERATION(Negation, -v)
+
     OGLML_DEFINE_OPERATION(Radians, (pi / 180.0) * v)
     OGLML_DEFINE_OPERATION(Degrees, (180.0 / pi) * v)
 
@@ -74,9 +77,6 @@ namespace oglml {
     OGLML_DEFINE_OPERATION(ACosH, std::acosh(v))
     OGLML_DEFINE_OPERATION(ATanH, std::atanh(v))
 
-    OGLML_DEFINE_OPERATION(Promotion, +v)
-    OGLML_DEFINE_OPERATION(Negation, -v)
-
     OGLML_DEFINE_OPERATION(Exp, std::exp(v))
     OGLML_DEFINE_OPERATION(Exp2, std::exp2(v))
     OGLML_DEFINE_OPERATION(Log, std::log(v))
@@ -85,6 +85,7 @@ namespace oglml {
     OGLML_DEFINE_OPERATION(InverseSqrt, 1.0 / std::sqrt(v))
 
     OGLML_DEFINE_OPERATION(Abs, std::abs(v))
+    OGLML_DEFINE_OPERATION(Sign, v > 0.0 ? 1.0 : (v == 0.0 ? 0.0 : -1.0))
     OGLML_DEFINE_OPERATION(Floor, std::floor(v))
     OGLML_DEFINE_OPERATION(Trunc, std::trunc(v))
     OGLML_DEFINE_OPERATION(Round, std::round(v))
@@ -123,6 +124,7 @@ namespace oglml {
             return lhs;
         }
 
+
         template <std::size_t n, typename T1, typename T2>
         inline T1& assignValue(T1& lhs, const T2& rhs) {
             for (std::size_t i = 0; i < n; ++i)
@@ -145,7 +147,7 @@ namespace oglml {
         }
 
         template <class Op, std::size_t begin, std::size_t n, typename T1, typename T2>
-        inline T1& assignValue(T1& lhs, const T2& rhs) {
+        inline T1& opassignValue(T1& lhs, const T2& rhs) {
             for (std::size_t i = 0; i < n; ++i)
                 Op::runassign(lhs[begin + i], rhs);
             return lhs;
