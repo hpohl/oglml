@@ -87,6 +87,10 @@ namespace oglml {
     OGLML_FUNC_1ARG(round, Round)
     //OGLML_FUNC_1ARG(roundEven, RoundEven) // TODO
     // ... TODO
+
+    // -------------------------------------------------------------- //
+    // Geometric functions                                            //
+    // -------------------------------------------------------------- //
 }
 
 #endif // OGLML_FUNCS_HPP

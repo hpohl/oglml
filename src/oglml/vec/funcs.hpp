@@ -7,6 +7,7 @@
 
 #include <oglml/vec/storagepolicies/staticswizzler.hpp>
 #include <oglml/vec/storagepolicies/swizzler.hpp>
+#include <oglml/helpers/autoreturn.hpp>
 #include <oglml/vec/info.hpp>
 
 namespace oglml {
@@ -14,7 +15,7 @@ namespace oglml {
     namespace detail {
 
         template <class Op, std::size_t n, typename T, class SP>
-        inline Vec<n, decltype(Op::run(std::declval<T>()))>
+        inline const Vec<n, decltype(Op::run(std::declval<T>()))>
         operate(const Vec<n, T, SP>& v) {
             Vec<n, decltype(Op::run(std::declval<T>()))> r;
             for (std::size_t i = 0; i < n; ++i)
@@ -25,7 +26,7 @@ namespace oglml {
         template <class Op,
                   std::size_t nlhs, typename Tlhs, class SPlhs,
                   std::size_t nrhs, typename Trhs, class SPrhs>
-        typename vec::detail::CreateVec
+        const typename vec::detail::CreateVec
         <Op, nlhs, Tlhs, SPlhs, nrhs, Trhs, SPrhs>::Result
         operate(const Vec<nlhs, Tlhs, SPlhs>& lhs, const Vec<nrhs, Trhs, SPrhs>& rhs) {
             typename vec::detail::CreateVec
@@ -38,7 +39,7 @@ namespace oglml {
         template <class Op,
                   std::size_t nlhs, typename Tlhs, class SPlhs,
                   typename Trhs>
-        typename detail::GetSecond<
+        const typename detail::GetSecond<
         typename std::enable_if<!vec::IsVec<Trhs>::result>::type,
         typename vec::detail::CreateVecFromLhs<Op, nlhs, Tlhs, SPlhs, Trhs>::Result
         >::Result
@@ -53,7 +54,7 @@ namespace oglml {
         template <class Op,
                   typename Tlhs,
                   std::size_t nrhs, typename Trhs, class SPrhs>
-        typename detail::GetSecond<
+        const typename detail::GetSecond<
         typename std::enable_if<!vec::IsVec<Tlhs>::result>::type,
         typename vec::detail::CreateVecFromRhs<Op, Tlhs, nrhs, Trhs, SPrhs>::Result
         >::Result
@@ -191,6 +192,11 @@ namespace oglml {
 
     // ----------------------------------------------------------------------------
     // General funcs
+#define OGLML_VEC_FUNC_1ARG(_NAME_, _EX_) \
+    template <std::size_t n, typename T, class SP> \
+    auto _NAME_(const Vec<n, T, SP>& v) \
+    OGLML_AUTO_RETURN(detail::operate<_EX_>(v))
+
     // Compare
     template <std::size_t nlhs, typename Tlhs, class SPlhs,
               std::size_t nrhs, typename Trhs, class SPrhs>
@@ -204,6 +210,9 @@ namespace oglml {
         return true;
     }
 
+    // Negate
+    OGLML_VEC_FUNC_1ARG(negate, Negation)
+
     // Print
     template <std::size_t n, typename T, class SP>
     void print(const Vec<n, T, SP>& v) {
@@ -214,6 +223,9 @@ namespace oglml {
         }
         std::cout << std::endl;
     }
+
+    // Promote
+    OGLML_VEC_FUNC_1ARG(promote, Promotion)
 
     // Swizzle
     // Static

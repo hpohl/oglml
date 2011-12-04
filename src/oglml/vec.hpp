@@ -474,6 +474,13 @@ namespace oglml {
         const T& operator[](std::size_t i) const
         { return DataImpl::data[i]; }
 
+        // Promotion & negation
+        Vec<n, T> operator+()
+        { return promote(*this); }
+
+        Vec<n, T> operator-()
+        { return negate(*this); }
+
         // Assignment operator
         template <typename Rhs>
         ThisType& operator=(const Rhs& rhs)
