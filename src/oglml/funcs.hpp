@@ -6,6 +6,11 @@
 
 namespace oglml {
 
+#define OGLML_GLSL_FUNC(_NAME_) \
+    namespace glsl { \
+        using oglml::_NAME_; \
+    }
+
 #define OGLML_FUNC_1ARG(_NAME_, _EX_) \
     template <typename T> \
     inline auto _NAME_(const T& v) \
@@ -15,9 +20,7 @@ namespace oglml {
     inline auto _NAME_(const Vec<n, T, SP>& v) \
     OGLML_AUTO_RETURN(detail::operate<_EX_>(v)) \
     \
-    namespace glsl { \
-        using oglml::_NAME_; \
-    }
+    OGLML_GLSL_FUNC(_NAME_)
 
 #define OGLML_FUNC_2ARG(_NAME_, _EX_) \
     template <typename T1, typename T2> \
@@ -37,9 +40,7 @@ namespace oglml {
     inline auto _NAME_(float lhs, const Vec<n, T, SP>& rhs) \
     OGLML_AUTO_RETURN(detail::operate<_EX_>(lhs, rhs)) \
     \
-    namespace glsl { \
-        using oglml::_NAME_; \
-    }
+    OGLML_GLSL_FUNC(_NAME_)
 
     // -------------------------------------------------------------- //
     // Angle and trigonometry functions                               //
@@ -91,6 +92,65 @@ namespace oglml {
     // -------------------------------------------------------------- //
     // Geometric functions                                            //
     // -------------------------------------------------------------- //
+
+    // Length
+    template <std::size_t n, typename T, class SP>
+    float length(const Vec<n, T, SP>& v) {
+        float ret = 0;
+        for (std::size_t i = 0; i < n; ++i)
+            ret += Pow::run(v[i], 2.0);
+        return Sqrt::run(ret);
+    }
+
+    template <std::size_t n, class SP>
+    double length(const Vec<n, double, SP> &v) {
+        double ret = 0;
+        for (std::size_t i = 0; i < n; ++i)
+            ret += Pow::run(v[i], 2.0);
+        return Sqrt::run(ret);
+    }
+
+    OGLML_GLSL_FUNC(length)
+
+
+    // Distance
+    template <std::size_t n1, typename T1, class SP1,
+              std::size_t n2, typename T2, class SP2>
+    float distance(const Vec<n1, T1, SP1>& v1, const Vec<n2, T2, SP2>& v2)
+    { return length(v1 - v2); }
+
+    template <std::size_t n1, class SP1, std::size_t n2, class SP2>
+    double distance(const Vec<n1, double, SP1>& v1, const Vec<n2, double, SP2>& v2)
+    { return length(v1 - v2); }
+
+    OGLML_GLSL_FUNC(distance)
+
+
+    // Dot
+    template <std::size_t n, typename T1, class SP1,
+                             typename T2, class SP2>
+    float dot(const Vec<n, T1, SP1>& v1, const Vec<n, T2, SP2>& v2) {
+        float ret = 0;
+        for (std::size_t i = 0; i < n; ++i)
+            ret += v1[i] * v2[i];
+        return ret;
+    }
+
+    template <std::size_t n, class SP1, class SP2>
+    double dot(const Vec<n, double, SP1>& v1, const Vec<n, double, SP2>& v2) {
+        double ret = 0;
+        for (std::size_t i = 0; i < n; ++i)
+            ret += v1[i] * v2[i];
+        return ret;
+    }
+
+    OGLML_GLSL_FUNC(dot)
+
+
+    // Cross
+    /*template <std::size_t n1, typename T1, class SP1,
+              std::size_t n2, typename T2, class SP2>
+    */ // TODO
 }
 
 #endif // OGLML_FUNCS_HPP

@@ -16,7 +16,7 @@ int main() {
 
     vec3 r(v1);
 
-    r = negate(-r);
+    r = vec3(v1.xy(), 100.0);
 
     print(r);
 

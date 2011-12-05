@@ -35,6 +35,13 @@
 #define OGLML_GCC_VERSION_45 40500
 #define OGLML_GCC_VERSION_44 40400
 
+// OGLML needs at least GCC 4.5
+#ifdef OGLML_GNUC
+#if OGLML_GNUC_VERSION < OGLML_GCC_VERSION_45
+#error OGLML needs at least GCC 4.5
+#endif
+#endif
+
 // C++11 features
 // Constexpr
 #if OGLML_GNUC_VERSION < OGLML_GCC_VERSION_46

@@ -51,6 +51,78 @@ namespace oglml {
                     typedef Vec<nindices, T, SwizzlerSP> Result;
                 };
 
+#define OGLML_DEFINE_SWIZZLER_FUNC_2IDX(_NAME_, _IDX1_, _IDX2_) \
+    typename DefineSwizzler<_IDX1_, _IDX2_>::Result& _NAME_() { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_>::Result RetT; \
+        return *reinterpret_cast<RetT*>(&data); \
+    } \
+    \
+    const typename DefineSwizzler<_IDX1_, _IDX2_>::Result& _NAME_() const { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_>::Result RetT; \
+        return *reinterpret_cast<const RetT*>(&data); \
+    }
+
+#define OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(_NAME1_, _NAME2_, _NAME3_, _IDX1_, _IDX2_) \
+    OGLML_DEFINE_SWIZZLER_FUNC_2IDX(_NAME1_, _IDX1_, _IDX2_) \
+    OGLML_DEFINE_SWIZZLER_FUNC_2IDX(_NAME2_, _IDX1_, _IDX2_) \
+    OGLML_DEFINE_SWIZZLER_FUNC_2IDX(_NAME3_, _IDX1_, _IDX2_)
+
+#define OGLML_DEFINE_SWIZZLER_FUNC_3IDX(_NAME_, _IDX1_, _IDX2_, _IDX3_) \
+    typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_>::Result& _NAME_() { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_> \
+                ::Result RetT; \
+        return *reinterpret_cast<RetT*>(&data); \
+    } \
+    \
+    const typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_>::Result& \
+    _NAME_() const { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_> \
+                ::Result RetT; \
+        return *reinterpret_cast<const RetT*>(&data); \
+    }
+
+#define OGLML_DEFINE_SWIZZLER_FUNC_4IDX(_NAME_, _IDX1_, _IDX2_, _IDX3_, _IDX4_) \
+    typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_, _IDX4_>::Result& \
+    _NAME_() { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_, _IDX4_> \
+                ::Result RetT; \
+        return *reinterpret_cast<RetT*>(&data); \
+    } \
+    \
+    const typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_, _IDX4_>::Result& \
+    _NAME_() const { \
+        typedef typename DefineSwizzler<_IDX1_, _IDX2_, _IDX3_, _IDX4_> \
+                ::Result RetT; \
+        return *reinterpret_cast<const RetT*>(&data); \
+    }
+
+                // Two indices
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(xx, rr, ss, 0, 0)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(xy, rg, st, 0, 1)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(xz, rb, sp, 0, 2)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(xw, ra, sq, 0, 3)
+
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(yx, gr, ts, 1, 0)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(yy, gg, tt, 1, 1)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(yz, gb, tp, 1, 2)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(yw, ga, tq, 1, 3)
+
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(zx, br, ps, 2, 0)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(zy, bg, pt, 2, 1)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(zz, bb, pp, 2, 2)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(zw, ba, pq, 2, 3)
+
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(wx, ar, qs, 3, 0)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(wy, ag, qt, 3, 1)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(wz, ab, qp, 3, 2)
+                OGLML_DEFINE_SWIZZLER_FUNCS_2IDX(ww, aa, qq, 3, 3)
+
+                // Three indices
+                OGLML_DEFINE_SWIZZLER_FUNC_3IDX(xyz, 0, 1, 2)
+
+                // Four indices
+                OGLML_DEFINE_SWIZZLER_FUNC_4IDX(xyzw, 0, 1, 2, 3)
+
                 // Swizzlers + data
                 union {
                     // Contains the data, public accessable
@@ -67,7 +139,7 @@ namespace oglml {
                     // One index
 
                     // Two indices
-                    typename DefineSwizzler<0, 0>::Result xx, rr, ss;
+                    /*typename DefineSwizzler<0, 0>::Result xx, rr, ss;
                     typename DefineSwizzler<0, 1>::Result xy, rg, st;
                     typename DefineSwizzler<0, 2>::Result xz, rb, sp;
                     typename DefineSwizzler<0, 3>::Result xw, ra, sq;
@@ -85,10 +157,10 @@ namespace oglml {
                     typename DefineSwizzler<3, 0>::Result wx, ar, qs;
                     typename DefineSwizzler<3, 1>::Result wy, ag, qt;
                     typename DefineSwizzler<3, 2>::Result wz, ab, qp;
-                    typename DefineSwizzler<3, 3>::Result ww, aa, qq;
+                    typename DefineSwizzler<3, 3>::Result ww, aa, qq;*/
 
                     // Three indices
-                    typename DefineSwizzler<0, 0, 0>::Result xxx, rrr, sss;
+                    /*typename DefineSwizzler<0, 0, 0>::Result xxx, rrr, sss;
                     typename DefineSwizzler<0, 0, 1>::Result xxy, rrg, sst;
                     typename DefineSwizzler<0, 0, 2>::Result xxz, rrb, ssp;
                     typename DefineSwizzler<0, 0, 3>::Result xxw, rra, ssq;
@@ -154,7 +226,7 @@ namespace oglml {
                     typename DefineSwizzler<3, 3, 0>::Result wwx, aar, qqs;
                     typename DefineSwizzler<3, 3, 1>::Result wwy, aag, qqt;
                     typename DefineSwizzler<3, 3, 2>::Result wwz, aab, qqp;
-                    typename DefineSwizzler<3, 3, 3>::Result www, aaa, qqq;
+                    typename DefineSwizzler<3, 3, 3>::Result www, aaa, qqq;*/
 
                     // Four indices
                     /*typename DefineSwizzler<0, 0, 0, 0>::Result xxxx, rrrr, ssss;
@@ -450,9 +522,6 @@ namespace oglml {
     class Vec : public BaseVec<n, T>, public vec::detail::CreateDataImpl<n, T, SP>::Result
     {
     public:
-        // Conditions
-        static_assert(n > 1, "An OGLML Vec has to have at least 2 dimensions.");
-
         // Typedefs
         typedef Vec<n, T, SP> ThisType;
         typedef typename SP::template Container<n, T> Container;

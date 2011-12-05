@@ -21,6 +21,9 @@ namespace oglml {
 
     template <std::size_t nt, typename Tt>
     struct BaseVec : public vec::detail::VecIdentifier {
+        // Conditions
+        static_assert(nt > 1, "An OGLML Vec must have at least 2 dimensions.");
+
         oglml_constexpr static std::size_t n = nt;
         typedef Tt T;
     };
