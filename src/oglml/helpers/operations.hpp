@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 
+#include <oglml/helpers/autoreturn.hpp>
 #include <oglml/helpers/constants.hpp>
 
 namespace oglml {

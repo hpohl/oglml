@@ -29,6 +29,12 @@ namespace oglml {
 
         template <int i>
         struct Int2Type { };
+
+        template <typename T>
+        struct Unclear {
+            oglml_constexpr static bool result = true;
+        };
+
     } // namespace detail
 
 } // namespace oglml

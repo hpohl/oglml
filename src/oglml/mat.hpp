@@ -4,13 +4,15 @@
 #include <cstddef>
 
 #include <oglml/mat/storagepolicies/default.hpp>
+#include <oglml/mat/info.hpp>
+#include <oglml/mat/funcs.hpp>
 #include <oglml/vecfwd.hpp>
+#include <oglml/matfwd.hpp>
 
 namespace oglml {
 
-    template <std::size_t cols, std::size_t rows,
-              typename T, class SP = mat::DefaultStorage>
-    class Mat {
+    template <std::size_t cols, std::size_t rows, typename T, class SP>
+    class Mat : public BaseMat<cols, rows, T> {
     public:
         // Typedefs
         typedef Mat<cols, rows, SP> ThisType;
@@ -22,6 +24,15 @@ namespace oglml {
         Container mData;
 
     public:
+
+        // Ctor and dtor
+        Mat() = default;
+
+        template <typename First, typename... Args>
+        Mat(const First& first, const Args&... args)
+        { assign(*this, first, args...); }
+
+        ~Mat() = default;
 
         // Index operator
         ReturnT operator[](std::size_t i)
@@ -43,6 +54,10 @@ namespace oglml {
         typedef Mat<4, 2, float> mat4x2;
         typedef Mat<4, 3, float> mat4x3;
         typedef Mat<4, 4, float> mat4x4;
+
+        typedef mat2x2 mat2;
+        typedef mat3x3 mat3;
+        typedef mat4x4 mat4;
 
         typedef Mat<2, 2, double> dmat2x2;
         typedef Mat<2, 3, double> dmat2x3;

@@ -15,6 +15,10 @@ namespace oglml {
         oglml_constexpr T min(T a, T b)
         { return a < b ? a : b; }
 
+        template <typename T>
+        oglml_constexpr_if_available bool greater(T a, T b)
+        { return a > b; }
+
     } // namespace cnst
 
 } // namespace oglml

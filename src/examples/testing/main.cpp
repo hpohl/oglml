@@ -12,13 +12,16 @@ struct S { };
 int main() {
     vec3 v1(1.0, 2.0, 3.0);
     vec3 v2(1.0, 2.0, 3.0);
-    ivec3 iv1(1, 2, 3);
+    vec3 vr;
 
-    vec3 r(v1);
+    //print(vr);
 
-    r = vec3(v1.xy(), 100.0);
+    // -------------
+    mat3 m1;
+    mat2 m2;
+    mat4 mr(10.0);
 
-    print(r);
+    print(mr);
 
     return 0;
 }

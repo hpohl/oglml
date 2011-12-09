@@ -1,8 +1,8 @@
 #ifndef OGLML_FUNCS_HPP
 #define OGLML_FUNCS_HPP
 
-#include <oglml/helpers/autoreturn.hpp>
 #include <oglml/vec.hpp>
+#include <oglml/mat.hpp>
 
 namespace oglml {
 
@@ -14,7 +14,7 @@ namespace oglml {
 #define OGLML_FUNC_1ARG(_NAME_, _EX_) \
     template <typename T> \
     inline auto _NAME_(const T& v) \
-    OGLML_AUTO_RETURN(_EX_::run(v)) \
+    OGLML_AUTO_RETURN(_EX_::run<const T&>(v)) \
     \
     template <std::size_t n, typename T, class SP> \
     inline auto _NAME_(const Vec<n, T, SP>& v) \
@@ -95,7 +95,7 @@ namespace oglml {
 
     // Length
     template <std::size_t n, typename T, class SP>
-    float length(const Vec<n, T, SP>& v) {
+    inline float length(const Vec<n, T, SP>& v) {
         float ret = 0;
         for (std::size_t i = 0; i < n; ++i)
             ret += Pow::run(v[i], 2.0);
@@ -103,7 +103,7 @@ namespace oglml {
     }
 
     template <std::size_t n, class SP>
-    double length(const Vec<n, double, SP> &v) {
+    inline double length(const Vec<n, double, SP> &v) {
         double ret = 0;
         for (std::size_t i = 0; i < n; ++i)
             ret += Pow::run(v[i], 2.0);
@@ -116,11 +116,12 @@ namespace oglml {
     // Distance
     template <std::size_t n1, typename T1, class SP1,
               std::size_t n2, typename T2, class SP2>
-    float distance(const Vec<n1, T1, SP1>& v1, const Vec<n2, T2, SP2>& v2)
+    inline float distance(const Vec<n1, T1, SP1>& v1, const Vec<n2, T2, SP2>& v2)
     { return length(v1 - v2); }
 
     template <std::size_t n1, class SP1, std::size_t n2, class SP2>
-    double distance(const Vec<n1, double, SP1>& v1, const Vec<n2, double, SP2>& v2)
+    inline double distance(const Vec<n1, double, SP1>& v1,
+                           const Vec<n2, double, SP2>& v2)
     { return length(v1 - v2); }
 
     OGLML_GLSL_FUNC(distance)
@@ -129,7 +130,7 @@ namespace oglml {
     // Dot
     template <std::size_t n, typename T1, class SP1,
                              typename T2, class SP2>
-    float dot(const Vec<n, T1, SP1>& v1, const Vec<n, T2, SP2>& v2) {
+    inline float dot(const Vec<n, T1, SP1>& v1, const Vec<n, T2, SP2>& v2) {
         float ret = 0;
         for (std::size_t i = 0; i < n; ++i)
             ret += v1[i] * v2[i];
@@ -137,7 +138,7 @@ namespace oglml {
     }
 
     template <std::size_t n, class SP1, class SP2>
-    double dot(const Vec<n, double, SP1>& v1, const Vec<n, double, SP2>& v2) {
+    inline double dot(const Vec<n, double, SP1>& v1, const Vec<n, double, SP2>& v2) {
         double ret = 0;
         for (std::size_t i = 0; i < n; ++i)
             ret += v1[i] * v2[i];
@@ -148,9 +149,75 @@ namespace oglml {
 
 
     // Cross
-    /*template <std::size_t n1, typename T1, class SP1,
-              std::size_t n2, typename T2, class SP2>
-    */ // TODO
+    namespace ncross {
+
+        template <typename T1, typename T2>
+        struct CreateReturnT {
+            typedef decltype(std::declval<T1>() * std::declval<T2>() -
+                             std::declval<T2>() * std::declval<T1>()) T;
+            typedef Vec<3, T> Result;
+        };
+
+    } // namespace ncross
+
+    template <typename T1, class SP1, typename T2, class SP2>
+    inline typename ncross::CreateReturnT<T1, T2>::Result
+    cross(const Vec<3, T1, SP1>& v1, const Vec<3, T2, SP2>& v2) {
+        return typename ncross::CreateReturnT<T1, T2>::Result(
+        v1[1] * v2[2] - v2[1] * v1[2],
+        v1[2] * v2[0] - v2[2] * v1[0],
+        v1[0] * v2[1] - v2[0] * v1[1]);
+    }
+
+    OGLML_GLSL_FUNC(cross)
+
+
+    // Normalize
+    template <std::size_t n, typename T, class SP>
+    inline auto normalize(const Vec<n, T, SP>& v)
+    OGLML_AUTO_RETURN(Vec<n, T>(v / length(v)))
+
+    OGLML_GLSL_FUNC(normalize)
+
+
+    // Faceforward
+    template <std::size_t n, typename Tn, class SPn,
+    typename Ti, class SPi, std::size_t nnref, typename Tnnref, class SPnnref>
+    inline Vec<nnref, Tnnref> faceforward(const Vec<n, Tn, SPn>& nv,
+                                          const Vec<n, Ti, SPi>& i,
+                                          const Vec<nnref, Tnnref, SPnnref>& nref)
+    { return (dot(nref, i) < 0.0 ? nv : -nv); }
+
+    OGLML_GLSL_FUNC(faceforward)
+
+
+    // Reflect
+    template <std::size_t ni, typename Ti, class SPi,
+              std::size_t nn, typename Tn, class SPn>
+    inline Vec<ni, Tn> reflect(const Vec<ni, Ti, SPi>& i,
+                               const Vec<nn, Tn, SPn>& n)
+    { return i - 2.0 * dot(n, i) * n; }
+
+    OGLML_GLSL_FUNC(reflect)
+
+
+    // Refract
+    template <std::size_t ni, typename Ti, class SPi,
+              std::size_t nn, typename Tn, class SPn>
+    inline Vec<ni, Tn> refract(const Vec<ni, Ti, SPi>& i,
+                               const Vec<nn, Tn, SPn>& n,
+                               float eta) {
+        float k = 1.0 - eta * eta * (1.0 - dot(n, i) * dot(n, i));
+        if (k < 0.0)
+            return Vec<ni, Tn>(0.0);
+        else
+            return eta * i - (eta * dot(n, i) + sqrt(k)) * n;
+    }
+
+    OGLML_GLSL_FUNC(refract)
+
+
+
 }
 
 #endif // OGLML_FUNCS_HPP
