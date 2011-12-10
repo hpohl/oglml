@@ -6,6 +6,7 @@
 #include <oglml/mat/storagepolicies/default.hpp>
 #include <oglml/mat/info.hpp>
 #include <oglml/mat/funcs.hpp>
+#include <oglml/mat/operators.hpp>
 #include <oglml/vecfwd.hpp>
 #include <oglml/matfwd.hpp>
 
@@ -15,7 +16,7 @@ namespace oglml {
     class Mat : public BaseMat<cols, rows, T> {
     public:
         // Typedefs
-        typedef Mat<cols, rows, SP> ThisType;
+        typedef Mat<cols, rows, T, SP> ThisType;
         typedef typename SP::template Container<cols, rows, T> Container;
         typedef typename Container::ReturnT ReturnT;
         typedef typename Container::ConstReturnT ConstReturnT;
@@ -28,8 +29,12 @@ namespace oglml {
         // Ctor and dtor
         Mat() = default;
 
+        template <typename Tm, class SPm>
+        Mat(const Mat<cols, rows, Tm, SPm>& m)
+        { assign(*this, m); }
+
         template <typename First, typename... Args>
-        Mat(const First& first, const Args&... args)
+        explicit Mat(const First& first, const Args&... args)
         { assign(*this, first, args...); }
 
         ~Mat() = default;
@@ -40,6 +45,18 @@ namespace oglml {
 
         ConstReturnT operator[](std::size_t i) const
         { return mData[i]; }
+
+        // Assignment operator
+        template <typename Tm, class SPm>
+        ThisType& operator=(const Mat<cols, rows, Tm, SPm>& rhs)
+        { assign(*this, rhs); return *this; }
+
+        // Promotion & negation
+        Mat<cols, rows, T> operator+()
+        { return promote(*this); }
+
+        Mat<cols, rows, T> operator-()
+        { return negate(*this); }
 
     };
 
@@ -68,6 +85,10 @@ namespace oglml {
         typedef Mat<4, 2, double> dmat4x2;
         typedef Mat<4, 3, double> dmat4x3;
         typedef Mat<4, 4, double> dmat4x4;
+
+        typedef dmat2x2 dmat2;
+        typedef dmat3x3 dmat3;
+        typedef dmat4x4 dmat4;
 
     } // namespace glsl
 

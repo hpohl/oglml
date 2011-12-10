@@ -12,6 +12,66 @@
 
 namespace oglml {
 
+    namespace detail {
+
+        template <class Op, std::size_t cols, std::size_t rows, typename T, class SP>
+        inline const Mat<cols, rows, T> operate(const Mat<cols, rows, T, SP>& m) {
+            Mat<cols, rows, T> ret;
+            for (std::size_t col = 0; col < cols; ++col) {
+                for (std::size_t row = 0; row < rows; ++row) {
+                    ret[col][row] = Op::run(m[col][row]);
+                }
+            }
+            return ret;
+        }
+
+        template <class Op,
+                  std::size_t cols1, std::size_t rows1, typename T1, class SP1,
+                  std::size_t cols2, std::size_t rows2, typename T2, class SP2>
+        inline const typename mat::detail::CreateMat<Plus, cols1, rows1, T1, SP1,
+                                                     cols2, rows2, T2, SP2>::Result
+        operate(const Mat<cols1, rows1, T1, SP1>& m1,
+                const Mat<cols2, rows2, T2, SP2>& m2) {
+            typename mat::detail::CreateMat<Plus, cols1, rows1, T1, SP1,
+                    cols2, rows2, T2, SP2>::Result ret;
+            for (std::size_t col = 0; col < cols1; ++col) {
+                for (std::size_t row = 0; row < rows1; ++row) {
+                    ret[col][row] = Op::run(m1[col][row], m2[col][row]);
+                }
+            }
+            return ret;
+        }
+
+        template <class Op,
+                  std::size_t cols, std::size_t rows, typename Tm, class SP,
+                  typename Tv>
+        inline const Mat<cols, rows,
+        decltype(Op::run(std::declval<Tm>(), std::declval<Tv>()))>
+        operate(const Mat<cols, rows, Tm, SP>& m, const Tv& v) {
+            Mat<cols, rows, decltype(Op::run(std::declval<Tm>(), std::declval<Tv>()))> ret;
+            for (std::size_t col = 0; col < cols; ++col) {
+                for (std::size_t row = 0; row < rows; ++row)
+                    ret[col][row] = Op::run(m[col][row], v);
+            }
+            return ret;
+        }
+
+        template <class Op, typename Tv,
+                  std::size_t cols, std::size_t rows, typename Tm, class SP>
+        inline const Mat<cols, rows,
+        decltype(Op::run(std::declval<Tv>(), std::declval<Tm>()))>
+        operate(const Tv& v, const Mat<cols, rows, Tm, SP>& m) {
+            Mat<cols, rows, decltype(Op::run(std::declval<Tv>(), std::declval<Tm>()))> ret;
+            for (std::size_t col = 0; col < cols; ++col) {
+                for (std::size_t row = 0; row < rows; ++row)
+                    ret[col][row] = Op::run(v, m[col][row]);
+            }
+            return ret;
+        }
+
+
+    } // namespace detail
+
     // Assignments
     namespace nmassign {
 
@@ -125,11 +185,8 @@ namespace oglml {
                       std::size_t nv, typename Tv, class SPv, typename... Args>
             static void run(Mat<colsm, rowsm, Tm, SPm> &m,
                             const Vec<nv, Tv, SPv>& v, const Args&... args) {
-                //EnoughSpace<colsm, rowsm, nv>::check();
-
                 for (std::size_t i = 0; i < nv; ++i)
                     m[tcol + ((trow + i) / rowsm)][(trow + i) % rowsm] = v[i];
-
                 nextAssignment<nv>(m, args...);
             }
         };
@@ -145,15 +202,26 @@ namespace oglml {
 
     // ----------------------------------------------------------------------------
     // General funcs
+#define OGLML_MAT_FUNC_1ARG(_NAME_, _EX_) \
+    template <std::size_t cols, std::size_t rows, typename T, class SP> \
+    auto _NAME_(const Mat<cols, rows, T, SP>& m) \
+    OGLML_AUTO_RETURN(detail::operate<_EX_>(m))
+
+
+    // Negation
+    OGLML_MAT_FUNC_1ARG(negate, Negation)
 
     // Print
     template <std::size_t cols, std::size_t rows, typename T, class SP>
-    void print(const Mat<cols, rows, T, SP>& m) {
+    inline void print(const Mat<cols, rows, T, SP>& m) {
         for (std::size_t i = 0; i < cols; ++i) {
             print(m[i]);
         }
         std::cout << std::endl;
     }
+
+    // Promotion
+    OGLML_MAT_FUNC_1ARG(promote, Promotion)
 
 
 } // namespace oglml

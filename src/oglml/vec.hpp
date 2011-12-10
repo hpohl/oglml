@@ -477,7 +477,7 @@ namespace oglml {
                     // One index
 
                     // Two indices
-                    /*typename DefineSwizzler<0, 0>::Result xx, rr, ss;
+                    typename DefineSwizzler<0, 0>::Result xx, rr, ss;
                     typename DefineSwizzler<0, 1>::Result xy, rg, st;
                     typename DefineSwizzler<0, 2>::Result xz, rb, sp;
                     typename DefineSwizzler<0, 3>::Result xw, ra, sq;
@@ -495,10 +495,10 @@ namespace oglml {
                     typename DefineSwizzler<3, 0>::Result wx, ar, qs;
                     typename DefineSwizzler<3, 1>::Result wy, ag, qt;
                     typename DefineSwizzler<3, 2>::Result wz, ab, qp;
-                    typename DefineSwizzler<3, 3>::Result ww, aa, qq;*/
+                    typename DefineSwizzler<3, 3>::Result ww, aa, qq;
 
                     // Three indices
-                    /*typename DefineSwizzler<0, 0, 0>::Result xxx, rrr, sss;
+                    typename DefineSwizzler<0, 0, 0>::Result xxx, rrr, sss;
                     typename DefineSwizzler<0, 0, 1>::Result xxy, rrg, sst;
                     typename DefineSwizzler<0, 0, 2>::Result xxz, rrb, ssp;
                     typename DefineSwizzler<0, 0, 3>::Result xxw, rra, ssq;
@@ -564,10 +564,10 @@ namespace oglml {
                     typename DefineSwizzler<3, 3, 0>::Result wwx, aar, qqs;
                     typename DefineSwizzler<3, 3, 1>::Result wwy, aag, qqt;
                     typename DefineSwizzler<3, 3, 2>::Result wwz, aab, qqp;
-                    typename DefineSwizzler<3, 3, 3>::Result www, aaa, qqq;*/
+                    typename DefineSwizzler<3, 3, 3>::Result www, aaa, qqq;
 
                     // Four indices
-                    /*typename DefineSwizzler<0, 0, 0, 0>::Result xxxx, rrrr, ssss;
+                    typename DefineSwizzler<0, 0, 0, 0>::Result xxxx, rrrr, ssss;
                     typename DefineSwizzler<0, 0, 0, 1>::Result xxxy, rrrg, ssst;
                     typename DefineSwizzler<0, 0, 0, 2>::Result xxxz, rrrb, sssp;
                     typename DefineSwizzler<0, 0, 0, 3>::Result xxxw, rrra, sssq;
@@ -825,7 +825,7 @@ namespace oglml {
                     typename DefineSwizzler<3, 3, 3, 0>::Result wwwx, aaar, qqqs;
                     typename DefineSwizzler<3, 3, 3, 1>::Result wwwy, aaag, qqqt;
                     typename DefineSwizzler<3, 3, 3, 2>::Result wwwz, aaab, qqqp;
-                    typename DefineSwizzler<3, 3, 3, 3>::Result wwww, aaaa, qqqq;*/
+                    typename DefineSwizzler<3, 3, 3, 3>::Result wwww, aaaa, qqqq;
 
 #endif // OGLML_CXX11_UNRESTRICTED_UNIONS
                 };
@@ -857,9 +857,8 @@ namespace oglml {
 
 
     template <std::size_t n, typename T, class SP>
-    class Vec : public BaseVec<n, T>, public vec::detail::CreateDataImpl<n, T, SP>::Result
+    struct Vec : public BaseVec<n, T>, public vec::detail::CreateDataImpl<n, T, SP>::Result
     {
-    public:
         // Typedefs
         typedef Vec<n, T, SP> ThisType;
         typedef typename SP::template Container<n, T> Container;
