@@ -22,13 +22,12 @@ namespace oglml {
     OGLML_DEFINE_MAT_OPERATOR(-, Minus)
     OGLML_DEFINE_MAT_OPERATOR(/, Divides)
 
+    // Multiplication needs special SFINAE conditions
     template <typename Tlhs, typename Trhs>
     inline auto operator*(const Tlhs& lhs, const Trhs& rhs)
     -> typename detail::GetSecond<
-
     typename std::enable_if<(mat::IsMat<Tlhs>::result ^ mat::IsMat<Trhs>::result) &&
     !vec::OneIsVec<Tlhs, Trhs>::result>::type,
-
     decltype(detail::operate<Multiplies>(lhs, rhs))
     >::Result
     { return detail::operate<Multiplies>(lhs, rhs); }
@@ -51,20 +50,6 @@ namespace oglml {
                     (Multiplies::run(std::declval<T1>(), std::declval<T2>()))> Result;
 
         };
-
-        /*template <std::size_t cols, std::size_t rows, typename Tm,
-                  std::size_t n, typename Tv>
-        struct CreateMatrixVecMultReturnT {
-
-            static_assert(cols == n, "Multiplication illegal.");
-
-            oglml_constexpr static std::size_t cols = n;
-            oglml_constexpr static std::size_t rows = rows;
-
-            typedef const Mat<cols, rows, decltype
-                    (Multiplies::run(std::declval<Tm>(), std::declval<Tv>()))> Result;
-
-        };*/
 
     } // namespace detail
 
@@ -89,12 +74,6 @@ namespace oglml {
         }
         return ret;
     }
-
-    /*template <std::size_t cols, std::size_t rows, typename Tm, class SPm,
-              std::size_t n, typename Tv, class SPv>
-    inline typename detail::CreateMatrixVecMultReturnT
-    <cols, rows, Tm, SPm, n, Tv, SPv>::Result
-    operator*(const Mat<cols, rows, Tm, SPm>& m, const Vec<)*/
 
 
 } // namespace oglml

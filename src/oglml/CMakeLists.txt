@@ -1,5 +1,5 @@
 add_library(oglml SHARED dummy.cpp vec.hpp vecfwd.hpp
-            mat.hpp matfwd.hpp funcs.hpp)
+            mat.hpp matfwd.hpp funcs.hpp operators.hpp glsl.hpp)
 
 add_subdirectory(helpers)
 add_subdirectory(vec)

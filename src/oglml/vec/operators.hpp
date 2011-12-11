@@ -8,6 +8,7 @@
 #include <oglml/helpers/autoreturn.hpp>
 #include <oglml/vec/funcs.hpp>
 #include <oglml/vec/info.hpp>
+#include <oglml/mat/info.hpp>
 
 namespace oglml {
 
@@ -15,7 +16,8 @@ namespace oglml {
     template <typename Tlhs, typename Trhs> \
     auto operator _NAME_(const Tlhs& lhs, const Trhs& rhs) \
     -> typename detail::GetSecond< \
-    typename std::enable_if<vec::OneIsVec<Tlhs, Trhs>::result>::type, \
+    typename std::enable_if<vec::OneIsVec<Tlhs, Trhs>::result && \
+    !mat::OneIsMat<Tlhs, Trhs>::result>::type, \
     decltype(detail::operate<_EX_>(lhs, rhs)) \
     >::Result \
     { return detail::operate<_EX_>(lhs, rhs); }
