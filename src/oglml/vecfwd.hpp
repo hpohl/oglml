@@ -1,6 +1,10 @@
 #ifndef OGLML_VECFWD_HPP
 #define OGLML_VECFWD_HPP
 
+/*! \file vecfwd.hpp
+  \brief Contains the vec forward declaration
+*/
+
 #include <oglml/vec/storagepolicies/default.hpp>
 
 namespace oglml {

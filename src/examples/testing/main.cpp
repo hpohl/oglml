@@ -15,20 +15,20 @@ int main() {
     vec3 v2(1.0, 2.0, 3.0);
     vec3 vr;
 
-    //print(vr);
+    print(max(v1, v2.xxx));
 
     // -------------
-    mat2x4 m1(1, 2,
+    /*mat2x4 m1(1, 2, 3, 4,
+              5, 6, 7, 8);
+
+    mat4x2 m2(1, 2,
               3, 4,
               5, 6,
               7, 8);
 
-    mat4x2 m2(1, 2, 3, 4,
-              5, 6, 7, 8);
+    auto mr(v1.x * m1);
 
-    mat4 mr;
-
-    oglml::print(m1 * vec4(v1, 1.0));
+    oglml::print(mr);*/
 
     return 0;
 }

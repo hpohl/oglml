@@ -94,6 +94,20 @@ namespace oglml {
     OGLML_DEFINE_OPERATION(Fract, v - std::floor(v))
 
 
+    // Other ops
+    struct Min {
+        template <typename T1, typename T2>
+        static auto run(const T1& v1, const T2& v2)
+        OGLML_AUTO_RETURN(std::min(v1, v2))
+    };
+
+    struct Max {
+        template <typename T1, typename T2>
+        static auto run(const T1& v1, const T2& v2)
+        OGLML_AUTO_RETURN(std::max(v1, v2))
+    };
+
+
     namespace detail {
 
         // Helper funcs to prevent code to be blowed

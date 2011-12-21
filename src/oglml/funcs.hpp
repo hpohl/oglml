@@ -1,10 +1,15 @@
 #ifndef OGLML_FUNCS_HPP
 #define OGLML_FUNCS_HPP
 
+/*! \file funcs.hpp
+*/
+
 #include <oglml/vec.hpp>
 #include <oglml/mat.hpp>
 
 namespace oglml {
+
+#ifndef OGLML_DOXYGEN_SKIP
 
 #define OGLML_GLSL_FUNC(_NAME_) \
     namespace glsl { \
@@ -42,9 +47,16 @@ namespace oglml {
     \
     OGLML_GLSL_FUNC(_NAME_)
 
+#endif // OGLML_DOXYGEN_SKIP
+
     // -------------------------------------------------------------- //
     // Angle and trigonometry functions                               //
     // -------------------------------------------------------------- //
+
+    /*! \fn template <typename T> inline auto radians(const T& v)
+      \brief Converts degrees to radians
+    */
+
     OGLML_FUNC_1ARG(radians, Radians)
     OGLML_FUNC_1ARG(degrees, Degrees)
 
@@ -87,13 +99,28 @@ namespace oglml {
     OGLML_FUNC_1ARG(trunc, Trunc)
     OGLML_FUNC_1ARG(round, Round)
     //OGLML_FUNC_1ARG(roundEven, RoundEven) // TODO
-    // ... TODO
+    OGLML_FUNC_1ARG(ceil, Ceil)
+    OGLML_FUNC_1ARG(fract, Fract)
+
+    template <typename T1, typename T2>
+    inline auto mod(const T1& v1, const T2& v2)
+    OGLML_AUTO_RETURN(v1 % v2)
+
+    // modf // TODO
+
+    OGLML_FUNC_2ARG(min, Min)
+    OGLML_FUNC_2ARG(max, Max)
+
+    /*template <std::size_t n, typename T, class SP, typename Tmin, typename Tmax>
+    inline Vec<n, T> clamp*/
+
 
     // -------------------------------------------------------------- //
     // Geometric functions                                            //
     // -------------------------------------------------------------- //
 
     // Length
+    //! \brief Returns the length of a vector
     template <std::size_t n, typename T, class SP>
     inline float length(const Vec<n, T, SP>& v) {
         float ret = 0;
@@ -102,6 +129,7 @@ namespace oglml {
         return Sqrt::run(ret);
     }
 
+    //! \brief Returns the length of a vector
     template <std::size_t n, class SP>
     inline double length(const Vec<n, double, SP> &v) {
         double ret = 0;
@@ -114,11 +142,13 @@ namespace oglml {
 
 
     // Distance
+    //! \brief Returns the distance between two vectors
     template <std::size_t n1, typename T1, class SP1,
               std::size_t n2, typename T2, class SP2>
     inline float distance(const Vec<n1, T1, SP1>& v1, const Vec<n2, T2, SP2>& v2)
     { return length(v1 - v2); }
 
+    //! \brief Returns the distance between two vectors
     template <std::size_t n1, class SP1, std::size_t n2, class SP2>
     inline double distance(const Vec<n1, double, SP1>& v1,
                            const Vec<n2, double, SP2>& v2)
@@ -128,6 +158,7 @@ namespace oglml {
 
 
     // Dot
+    //! Calculates the dot product
     template <std::size_t n, typename T1, class SP1,
                              typename T2, class SP2>
     inline float dot(const Vec<n, T1, SP1>& v1, const Vec<n, T2, SP2>& v2) {
@@ -137,6 +168,7 @@ namespace oglml {
         return ret;
     }
 
+    //! Calculates the dot product
     template <std::size_t n, class SP1, class SP2>
     inline double dot(const Vec<n, double, SP1>& v1, const Vec<n, double, SP2>& v2) {
         double ret = 0;
@@ -149,6 +181,7 @@ namespace oglml {
 
 
     // Cross
+#ifndef OGLML_DOXYGEN_SKIP
     namespace ncross {
 
         template <typename T1, typename T2>
@@ -159,7 +192,9 @@ namespace oglml {
         };
 
     } // namespace ncross
+#endif // OGLML_DOXYGEN_SKIP
 
+    //! Returns the cross product
     template <typename T1, class SP1, typename T2, class SP2>
     inline typename ncross::CreateReturnT<T1, T2>::Result
     cross(const Vec<3, T1, SP1>& v1, const Vec<3, T2, SP2>& v2) {
@@ -217,6 +252,62 @@ namespace oglml {
     OGLML_GLSL_FUNC(refract)
 
 
+
+    // -------------------------------------------------------------- //
+    // Vector relational functions                                    //
+    // -------------------------------------------------------------- //
+
+#ifndef OGLML_DOXYGEN_SKIP
+#define OGLML_VEC_RELATIONAL_FUNC(_NAME_, _EX_) \
+    template <std::size_t n, typename T1, class SP1, typename T2, class SP2> \
+    inline Vec<n, bool> _NAME_(const Vec<n, T1, SP1>& v1, \
+                                 const Vec<n, T2, SP2>& v2) { \
+        Vec<n, bool> ret; \
+        for (std::size_t i = 0; i < n; ++i) \
+            ret[i] = (v1[i] _EX_ v2[i]); \
+        return ret; \
+    } \
+    \
+    OGLML_GLSL_FUNC(_NAME_)
+#endif // OGLML_DOXYGEN_SKIP
+
+    OGLML_VEC_RELATIONAL_FUNC(lessThan, <)
+    OGLML_VEC_RELATIONAL_FUNC(lessThanEqual, <=)
+    OGLML_VEC_RELATIONAL_FUNC(greaterThan, >)
+    OGLML_VEC_RELATIONAL_FUNC(greaterThanEqual, >=)
+    OGLML_VEC_RELATIONAL_FUNC(equal, ==)
+    OGLML_VEC_RELATIONAL_FUNC(notEqual, !=)
+
+
+    template <std::size_t n, class SP>
+    inline bool any(const Vec<n, bool, SP>& v) {
+        for (std::size_t i = 0; i < n; ++i) {
+            if (v[i])
+                return true;
+        }
+        return false;
+    }
+
+    OGLML_GLSL_FUNC(any)
+
+    template <std::size_t n, class SP>
+    inline bool all(const Vec<n, bool, SP>& v) {
+        for (std::size_t i = 0; i < n; ++i) {
+            if (!v[i])
+                return false;
+        }
+        return true;
+    }
+
+    OGLML_GLSL_FUNC(all)
+
+    template <std::size_t n, class SP>
+    inline Vec<n, bool> operator!(const Vec<n, bool, SP>& v) {
+        Vec<n, bool> ret;
+        for (std::size_t i = 0; i < n; ++i)
+            ret[i] = !v[i];
+        return ret;
+    }
 
 }
 

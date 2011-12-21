@@ -1,9 +1,15 @@
 #ifndef OGLML_OPERATORS_HPP
 #define OGLML_OPERATORS_HPP
 
+/*! \file operators.hpp
+  \brief Contains all operators between different oglml types
+*/
+
 #include <oglml/funcs.hpp>
 
 namespace oglml {
+
+#ifndef OGLML_DOXYGEN_SKIP
 
     // Matrix multiplication
     namespace detail {
@@ -40,6 +46,9 @@ namespace oglml {
 
     } // namespace detail
 
+#endif // OGLML_DOXYGEN_SKIP
+
+
     template <std::size_t cols, std::size_t rows, typename Tm, class SPm,
               std::size_t n, typename Tv, class SPv>
     inline typename detail::CreateMatrixVecMultReturnT<cols, rows, Tm, n, Tv>::Result
@@ -52,8 +61,9 @@ namespace oglml {
             for (std::size_t row = 0; row < ret.rows; ++row) {
 
                 ret[col][row] = 0.0;
-                for (std::size_t i = 0; i < m.cols; ++i)
+                for (std::size_t i = 0; i < m.cols; ++i) {
                     ret[col][row] += m[i][row] * v[col];
+                }
 
             }
         }
@@ -72,8 +82,9 @@ namespace oglml {
             for (std::size_t row = 0; row < ret.rows; ++row) {
 
                 ret[col][row] = 0.0;
-                for (std::size_t i = 0; i < m.cols; ++i)
-                    ret[col][row] += m[i][row] * v[row];
+                for (std::size_t i = 0; i < m.rows; ++i) {
+                    ret[col][row] += m[col][i] * v[row];
+                }
 
             }
         }

@@ -10,6 +10,9 @@
 #include <oglml/vecfwd.hpp>
 #include <oglml/matfwd.hpp>
 
+/*! \file mat.hpp
+*/
+
 namespace oglml {
 
     template <std::size_t cols, std::size_t rows, typename T, class SP>

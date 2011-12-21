@@ -1,6 +1,10 @@
 #ifndef OGLML_MATFWD_HPP
 #define OGLML_MATFWD_HPP
 
+/*! \file matfwd.hpp
+  \brief Contains the matrix forward declaration
+*/
+
 #include <oglml/mat/storagepolicies/default.hpp>
 
 namespace oglml {

@@ -214,10 +214,8 @@ namespace oglml {
     // Print
     template <std::size_t cols, std::size_t rows, typename T, class SP>
     inline void print(const Mat<cols, rows, T, SP>& m) {
-        for (std::size_t i = 0; i < cols; ++i) {
+        for (std::size_t i = 0; i < cols; ++i)
             print(m[i]);
-        }
-        std::cout << std::endl;
     }
 
     // Promotion
